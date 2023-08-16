@@ -5,6 +5,8 @@ Created on 2023-06-19
 """
 from typing import Optional
 from nicesrt.version import Version
+from nicesrt.leaflet import leaflet
+from nicesrt.srt import SRT
 from nicesrt.local_filepicker import LocalFilePicker
 from nicesrt.file_selector import FileSelector
 from nicegui import ui
@@ -27,8 +29,8 @@ class WebServer:
         self.log_view=None
         self.do_trace=True
         self.input=""
+        self.srt=None
         
- 
         @ui.page('/')
         async def home():
             await self.home()
@@ -68,7 +70,10 @@ class WebServer:
             click_args (object): The click event arguments.
         """
         try:
-            ui.notify("rendering ...")
+            ui.notify(f"rendering srt {self.input}")
+            srt_text=self.do_read_input(self.input)
+            self.srt=SRT.from_text(srt_text)
+            pass
             # show render result in log
             #self.log_view.push(render_result.stderr)
         except BaseException as ex:
@@ -111,7 +116,8 @@ class WebServer:
         """
         try:
             ui.notify(f"reading {input_str}")
-            self.log_view.clear()
+            if self.log_view:
+                self.log_view.clear()
             self.error_msg = None
         except BaseException as e:
             self.handle_exception(e, self.do_trace)
@@ -120,11 +126,32 @@ class WebServer:
         """Opens a Local filer picker dialog and reads the selected input file."""
         if self.is_local:
             pick_list = await LocalFilePicker('~', multiple=False)
-            if len(pick_list)>0:
+            if pick_list and len(pick_list)>0:
                 input_file=pick_list[0]
                 await self.read_and_optionally_render(input_file)
     pass
          
+    async def reload_file(self):
+        """
+        reload the input file
+        """
+        input_str=self.input
+        if os.path.exists(input_str):
+            input_str=os.path.abspath(input_str)
+        allowed_urls=[
+            "https://github.com/JuanIrache/DJI_SRT_Parser/tree/master/samples",
+            self.examples_path(),
+            self.root_path
+        ]
+        allowed=False
+        if not self.is_local:
+            for allowed_url in allowed_urls:
+                if input_str.startswith(allowed_url):
+                    allowed=True
+        if not allowed:
+            ui.notify("only white listed URLs and Path inputs are allowed")
+        else:    
+            await self.read_and_optionally_render(self.input)
     
     def link_button(self, name: str, target: str, icon_name: str):
         """
@@ -187,13 +214,6 @@ class WebServer:
         self.input=cargs.value
         pass
     
-    def code_changed(self,cargs):
-        """
-        react on changed code
-        """
-        self.code=cargs.value
-        pass
-    
     def toggle_icon(self,button:ui.button):
         """
         toggle the icon of the given button
@@ -214,16 +234,19 @@ class WebServer:
         self.setup_menu()
         with ui.column():
             with ui.splitter() as splitter:
-                with splitter.before:        
-                    with ui.scene(width=1024, height=768).classes("w-full") as scene:
-                        self.scene = scene
-                        scene.spot_light(distance=100, intensity=0.2).move(-10, 0, 10)
-                    with splitter.after:
+                with splitter.before:  
+                    with leaflet().classes('w-full h-96') as os_map:
+                        pass   
+                with splitter.after:
                         with ui.element("div").classes("w-full"):
                             self.example_selector=FileSelector(path=self.root_path,handler=self.read_and_optionally_render)
                             self.input_input=ui.input(
                                 value=self.input,
-                                on_change=self.input_changed).props("size=100")                     
+                                on_change=self.input_changed).props("size=100")
+                            self.tool_button(tooltip="reload",icon="refresh",handler=self.reload_file)    
+                            if self.is_local:
+                                self.tool_button(tooltip="open",icon="file_open",handler=self.open_file)
+            
         self.setup_footer()        
         if self.args.input:
             await self.read_and_optionally_render(self.args.input)
@@ -242,6 +265,7 @@ class WebServer:
             args (list): The command line arguments.
         """
         self.args=args
+        self.input=args.input
         self.is_local=args.local
         self.root_path=os.path.abspath(args.root_path) 
         self.render_on_load=args.render_on_load

@@ -3,13 +3,40 @@ Created on 2023-08-16
 
 @author: wf
 '''
+import os
 from nicesrt.srt import SRT
 from tests.basetest import Basetest
+import requests
 
 class Test_SRT(Basetest):
+    
+    def setUp(self, debug=False, profile=True):
+        Basetest.setUp(self, debug=debug, profile=profile)
+
+    def fetch_srt_files_from_github(self, repo_url: str, path: str):
+        # Extract user and repo name from the given URL
+        parts = repo_url.split("/")
+        user, repo = parts[-2], parts[-1]
+        
+        # Construct the API URL
+        api_url = f"https://api.github.com/repos/{user}/{repo}/{path}"
+    
+        headers = {"Accept": "application/vnd.github.v3+json"}
+        
+        response = requests.get(api_url, headers=headers)
+        response.raise_for_status()
+        
+        files = response.json()
+        
+        srt_files = [file["download_url"] for file in files if file["name"].lower().endswith(".srt")]
+        return srt_files
+
 
     def test_srt(self):
-        srt_text="""1
+        """
+        test some srt samples 
+        """
+        srt_samples=[("""1
 00:00:00,000 --> 00:00:00,033
 <font size="28">SrtCnt : 1, DiffTime : 33ms
 2023-08-15 09:18:24.589
@@ -26,13 +53,60 @@ class Test_SRT(Basetest):
 <font size="28">SrtCnt : 3, DiffTime : 34ms
 2023-08-15 09:18:24.655
 [iso : 200] [shutter : 1/180.0] [fnum : 170] [ev : 1.3] [ct : 5490] [color_md : default] [focal_len : 240] [dzoom_ratio: 10000, delta:0],[latitude: 48.486375] [longitude: 8.375566] [rel_alt: 0.000 abs_alt: 530.095] </font>
-"""
+""",3,48.486375,8.375567,0.00001),("""1
+00:00:01,000 --> 00:00:02,000
+HOME(149.0251,-20.2532) 2017.08.05 14:11:51
+GPS(149.0251,-20.2533,16) BAROMETER:1.9
+ISO:100 Shutter:60 EV: Fnum:2.2""",1,149.0251,-20.2533,16)]
         # Load the SRT text using the from_text classmethod
-        srt = SRT.from_text(srt_text)
+        for _i,srt_sample in enumerate(srt_samples):
+            srt_text,count,lat,lon,delta=srt_sample
+            srt = SRT.from_text(srt_text)
+            self.assertEqual(count,len(srt.subtitles))
+            geo_path=srt.as_geopath()
+            self.assertEqual(count,len(geo_path.path))
+            for g_lat,g_lon in geo_path.path:        
+                self.assertAlmostEqual(g_lat, lat, delta=delta)
+                self.assertAlmostEqual(g_lon, lon, delta=delta)
+                
+    def test_drone_videos(self):
+        """
+        Test method to check all SRT files from the `/Volumes/Dronevideos` directory.
+        """
+        dronevideos_path = "/Volumes/Dronevideos"
+        
+        if os.path.exists(dronevideos_path):
+            for filename in os.listdir(dronevideos_path):
+                if filename.endswith(".SRT"):
+                    with open(os.path.join(dronevideos_path, filename), 'r', encoding='utf-8') as file:
+                        text = file.read()
+                        
+                        # Create an SRT object and extract its GeoPath
+                        srt_obj = SRT.from_text(text)
+                        geo_path = srt_obj.as_geopath()
+                        print(f"{filename}:{len(geo_path.path)}")
+            
+    def test_samples(self):
+        """
+        test JuanIrache samples
+        """
+        debug=self.debug
+        debug=True
+        repo_urls = [
+            "https://github.com/JuanIrache/DJI_SRT_Parser",
+            "https://github.com/JuanIrache/dji-srt-viewer"]
+        for ir,repo_url in enumerate(repo_urls):
+            srt_files = self.fetch_srt_files_from_github(repo_url, "contents/samples")
     
-        # Extract the latitude and longitude from the first subtitle
-        lat1 = float(srt.extract_value(0, "latitude"))
-        lon1 = float(srt.extract_value(0, "longitude"))
+            for i,srt_file_url in enumerate(srt_files):
+                t=len(srt_files)
+                response = requests.get(srt_file_url)
+                response.raise_for_status()
     
-        self.assertAlmostEqual(lat1, 48.486375, delta=0.000001)
-        self.assertAlmostEqual(lon1, 8.375567, delta=0.000001)
+                srt_text = response.text
+                srt=SRT.from_text(srt_text)
+                geo_path=srt.as_geopath()
+                file_name = srt_file_url.split('/')[-1]
+                if debug:
+                    print(f"{ir+1}:{i+1:2d}/{t:2d}:{len(geo_path.path)}:{file_name}")
+                

@@ -17,5 +17,12 @@ export default {
       this.marker = L.marker(this.target);
       this.marker.addTo(this.map);
     },
+    draw_path(path) {
+      if (this.pathLayer) {
+        this.map.removeLayer(this.pathLayer);  // Remove previous path if any
+      }
+      this.pathLayer = L.polyline(path, {color: 'red'}).addTo(this.map);
+      this.map.fitBounds(this.pathLayer.getBounds());  // Adjust view to fit the path
+    }
   },
 };
