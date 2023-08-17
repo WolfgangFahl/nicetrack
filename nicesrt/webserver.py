@@ -239,21 +239,18 @@ class WebServer:
     async def home(self, client:Client):
         """Generates the home page with a map"""
         self.setup_menu()
-        with ui.column():
-            with ui.splitter() as splitter:
-                with splitter.before:  
-                    with leaflet().classes('w-full h-96') as self.geo_map:
-                        pass   
-                with splitter.after:
-                        with ui.element("div").classes("w-full"):
-                            self.example_selector=FileSelector(path=self.root_path,handler=self.read_and_optionally_render)
-                            self.input_input=ui.input(
-                                value=self.input,
-                                on_change=self.input_changed).props("size=100")
-                            self.tool_button(tooltip="reload",icon="refresh",handler=self.reload_file)    
-                            if self.is_local:
-                                self.tool_button(tooltip="open",icon="file_open",handler=self.open_file)
-            
+    
+        with ui.element("div").classes("w-full"):
+            self.example_selector=FileSelector(path=self.root_path,handler=self.read_and_optionally_render)
+            self.input_input=ui.input(
+                value=self.input,
+                on_change=self.input_changed).props("size=100")
+            self.tool_button(tooltip="reload",icon="refresh",handler=self.reload_file)    
+            if self.is_local:
+                self.tool_button(tooltip="open",icon="file_open",handler=self.open_file)
+        with leaflet().classes('w-full h-96') as self.geo_map:
+            pass   
+        
         self.setup_footer()        
         if self.args.input:
             #await client.connected()
