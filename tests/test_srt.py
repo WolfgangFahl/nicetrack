@@ -69,6 +69,23 @@ ISO:100 Shutter:60 EV: Fnum:2.2""",1,149.0251,-20.2533,16)]
                 self.assertAlmostEqual(g_lat, lat, delta=delta)
                 self.assertAlmostEqual(g_lon, lon, delta=delta)
                 
+                
+    def check_sample(self,srt_file_url:str,hint:str,debug:bool=True):
+        response = requests.get(srt_file_url)
+        response.raise_for_status()
+
+        srt_text = response.text
+        file_name = srt_file_url.split('/')[-1]
+        self.check_text(srt_text,hint,file_name,debug)
+        
+    def check_text(self,srt_text,hint,file_name,debug):
+        srt=SRT.from_text(srt_text)
+        geo_path=srt.as_geopath()
+        total_distance=geo_path.total_distance()
+        
+        if debug:
+            print(f"{hint}:{len(geo_path.path)}:{total_distance:.3f} km:{file_name}")
+                
     def test_drone_videos(self):
         """
         Test method to check all SRT files from the `/Volumes/Dronevideos` directory.
@@ -77,16 +94,16 @@ ISO:100 Shutter:60 EV: Fnum:2.2""",1,149.0251,-20.2533,16)]
         dronevideos_path = "/Volumes/Dronevideos"
         
         if os.path.exists(dronevideos_path):
-            for filename in os.listdir(dronevideos_path):
+            for i,filename in enumerate(os.listdir(dronevideos_path)):
                 if filename.endswith(".SRT"):
                     with open(os.path.join(dronevideos_path, filename), 'r', encoding='utf-8') as file:
-                        text = file.read()
-                        
-                        # Create an SRT object and extract its GeoPath
-                        srt_obj = SRT.from_text(text)
-                        geo_path = srt_obj.as_geopath()
-                        print(f"{filename}:{len(geo_path.path)}")
-            
+                        srt_text = file.read()
+                        self.check_text(srt_text, hint=f"{i:2}", file_name=filename, debug=True)
+                    
+    def test_sample(self):
+        sample_url="https://raw.githubusercontent.com/JuanIrache/dji-srt-viewer/master/samples/sample4.SRT"
+        self.check_sample(sample_url,"sample4",debug=True)
+        
     def test_samples(self):
         """
         test JuanIrache samples
@@ -101,13 +118,6 @@ ISO:100 Shutter:60 EV: Fnum:2.2""",1,149.0251,-20.2533,16)]
     
             for i,srt_file_url in enumerate(srt_files):
                 t=len(srt_files)
-                response = requests.get(srt_file_url)
-                response.raise_for_status()
-    
-                srt_text = response.text
-                srt=SRT.from_text(srt_text)
-                geo_path=srt.as_geopath()
-                file_name = srt_file_url.split('/')[-1]
-                if debug:
-                    print(f"{ir+1}:{i+1:2d}/{t:2d}:{len(geo_path.path)}:{file_name}")
+                hint=f"{ir+1}:{i+1:2d}/{t:2d}"
+                self.check_sample(srt_file_url,hint,debug)
                 

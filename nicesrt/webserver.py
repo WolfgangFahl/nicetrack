@@ -150,7 +150,7 @@ class WebServer:
             self.examples_path(),
             self.root_path
         ]
-        allowed=False
+        allowed=self.is_local
         if not self.is_local:
             for allowed_url in allowed_urls:
                 if input_str.startswith(allowed_url):
@@ -160,7 +160,7 @@ class WebServer:
         else:    
             await self.read_and_optionally_render(self.input)
     
-    def link_button(self, name: str, target: str, icon_name: str):
+    def link_button(self, name: str, target: str, icon_name: str,new_tab:bool=True):
         """
         Creates a button with a specified icon that opens a target URL upon being clicked.
     
@@ -168,12 +168,13 @@ class WebServer:
             name (str): The name to be displayed on the button.
             target (str): The target URL that should be opened when the button is clicked.
             icon_name (str): The name of the icon to be displayed on the button.
+            new_tab(bool): if True open link in new tab
     
         Returns:
             The button object.
         """
         with ui.button(name,icon=icon_name) as button:
-            button.on("click",lambda: (ui.open(target)))
+            button.on("click",lambda: (ui.open(target,new_tab=new_tab)))
         return button
     
     

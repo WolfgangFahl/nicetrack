@@ -7,10 +7,6 @@ import pysrt
 from nicesrt.geo import GeoPath
 import re
 
-import pysrt
-from nicesrt.geo import GeoPath
-import re
-
 class SRT:
     """
     Class to represent and manipulate SRT (SubRip Subtitle) data.
@@ -59,9 +55,9 @@ class SRT:
             # Search using the bracketed value pattern
             matches = re.findall(self.patterns['bracketed_value'], text)
             for k, v1, v2, _ in matches:
-                if k in ["GPS", "HOME"] and key == "latitude":
+                if k in ["GPS"] and key == "latitude":
                     return v1
-                elif k in ["GPS", "HOME"] and key == "longitude":
+                elif k in ["GPS"] and key == "longitude":
                     return v2
 
         return result
