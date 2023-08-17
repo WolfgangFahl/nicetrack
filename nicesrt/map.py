@@ -19,6 +19,7 @@ class MapExample:
         self.locations = {
             (48.486375, 8.375567): 'Baiersbronn',
             (52.5200, 13.4049): 'Berlin',
+            (52.37487,9.74168): 'Hannover',
             (40.7306, -74.0060): 'New York',
             (39.9042, 116.4074): 'Beijing',
             (35.6895, 139.6917): 'Tokyo',
@@ -42,8 +43,17 @@ class MapExample:
             
     def on_change_zoom_level(self,_ce):
         self.zoom_level=_ce.value
-        self.map.set_zoom(self.zoom_level)
+        self.map.set_zoom_level(self.zoom_level)
         pass
+    
+    async def draw_path(self,_ce):
+        """
+        """
+        with self.map as geo_map:
+            locs=list(self.locations.keys())
+            path=[locs[1],locs[2]]
+            geo_map.draw_path(path)
+            
             
     async def show_map(self,client:Client):
         self.map = leaflet().classes('w-full h-96')
@@ -52,6 +62,7 @@ class MapExample:
         await client.connected()  # wait for websocket connection
         selection.set_value(next(iter(self.locations)))  # trigger map.set_location with first location in selection
         zoom_selection.set_value(self.zoom_level)
+        ui.button("Path",on_click=self.draw_path)
     
     def run(self):    
         ui.run(title="map example",reload=False)

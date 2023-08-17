@@ -17,7 +17,7 @@ export default {
       this.marker = L.marker(this.target);
       this.marker.addTo(this.map);
     },
-    set_zoom(zoom_level) {
+    set_zoom_level(zoom_level) {
 		this.map.setZoom(zoom_level);
 	},
     draw_path(path) {

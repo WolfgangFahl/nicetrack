@@ -27,8 +27,8 @@ class leaflet(ui.element, component='leaflet.js'):
         lat,lon=location
         self.run_method('set_location',lat,lon,zoom_level)
         
-    def set_zoom(self,zoom_level:int):
-        self.run_method("set_zoom",zoom_level)
+    def set_zoom_level(self,zoom_level:int):
+        self.run_method("set_zoom_level",zoom_level)
         
     def draw_path(self, path: List[Tuple[float, float]]) -> None:
         """Draw a path on the map based on list of lat-long tuples."""
