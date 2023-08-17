@@ -9,6 +9,9 @@ from tests.basetest import Basetest
 import requests
 
 class Test_SRT(Basetest):
+    """
+    test SRT class
+    """
     
     def setUp(self, debug=False, profile=True):
         Basetest.setUp(self, debug=debug, profile=profile)
@@ -57,7 +60,7 @@ class Test_SRT(Basetest):
 00:00:01,000 --> 00:00:02,000
 HOME(149.0251,-20.2532) 2017.08.05 14:11:51
 GPS(149.0251,-20.2533,16) BAROMETER:1.9
-ISO:100 Shutter:60 EV: Fnum:2.2""",1,149.0251,-20.2533,16)]
+ISO:100 Shutter:60 EV: Fnum:2.2""",1,-20.2533,16,149.0251)]
         # Load the SRT text using the from_text classmethod
         for _i,srt_sample in enumerate(srt_samples):
             srt_text,count,lat,lon,delta=srt_sample
