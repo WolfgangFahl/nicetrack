@@ -2,6 +2,9 @@
 https://github.com/zauberzeug/nicegui/blob/main/examples/map/leaflet.py
 
 @author: rodja
+
+modified 2023-08-16 to handle set_zoom and draw_path
+@author: wf
 '''
 from typing import Tuple,List
 
@@ -9,14 +12,23 @@ from nicegui import ui
 
 
 class leaflet(ui.element, component='leaflet.js'):
+    """
+    nicegui Leaflet integration
+    
+    see https://leafletjs.com/
+    """
 
     def __init__(self) -> None:
         super().__init__()
         ui.add_head_html('<link href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" rel="stylesheet"/>')
         ui.add_head_html('<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>')
 
-    def set_location(self, location: Tuple[float, float]) -> None:
-        self.run_method('set_location', location[0], location[1])
+    def set_location(self, location: Tuple[float, float], zoom_level:int=9) -> None:
+        lat,lon=location
+        self.run_method('set_location',lat,lon,zoom_level)
+        
+    def set_zoom(self,zoom_level:int):
+        self.run_method("set_zoom",zoom_level)
         
     def draw_path(self, path: List[Tuple[float, float]]) -> None:
         """Draw a path on the map based on list of lat-long tuples."""

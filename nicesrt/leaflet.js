@@ -8,15 +8,18 @@ export default {
     }).addTo(this.map);
   },
   methods: {
-    set_location(latitude, longitude) {
+    set_location(latitude, longitude,zoom_level) {
       this.target = L.latLng(latitude, longitude);
-      this.map.setView(this.target, 9);
+      this.map.setView(this.target, zoom_level);
       if (this.marker) {
         this.map.removeLayer(this.marker);
       }
       this.marker = L.marker(this.target);
       this.marker.addTo(this.map);
     },
+    set_zoom(zoom_level) {
+		this.map.setZoom(zoom_level);
+	},
     draw_path(path) {
       if (this.pathLayer) {
         this.map.removeLayer(this.pathLayer);  // Remove previous path if any

@@ -73,6 +73,7 @@ ISO:100 Shutter:60 EV: Fnum:2.2""",1,149.0251,-20.2533,16)]
         """
         Test method to check all SRT files from the `/Volumes/Dronevideos` directory.
         """
+        # local test - set you own drone videos path here
         dronevideos_path = "/Volumes/Dronevideos"
         
         if os.path.exists(dronevideos_path):

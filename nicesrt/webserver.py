@@ -9,13 +9,12 @@ from nicesrt.leaflet import leaflet
 from nicesrt.srt import SRT
 from nicesrt.local_filepicker import LocalFilePicker
 from nicesrt.file_selector import FileSelector
-from nicegui import ui
+from nicegui import ui, Client
 
 import os
 import sys
 import requests
 import traceback
-
 
 class WebServer:
     """
@@ -32,8 +31,8 @@ class WebServer:
         self.srt=None
         
         @ui.page('/')
-        async def home():
-            await self.home()
+        async def home(client: Client):
+            await self.home(client)
             
         @ui.page('/settings')
         def settings():
@@ -73,7 +72,14 @@ class WebServer:
             ui.notify(f"rendering srt {self.input}")
             srt_text=self.do_read_input(self.input)
             self.srt=SRT.from_text(srt_text)
-            pass
+            self.geo_path=self.srt.as_geopath()
+            with self.geo_map as geo_map:
+                path=self.geo_path.get_path()
+                if len(path)>0:
+                    loc=path[0]
+                    geo_map.set_location(loc)
+                    print(f"setting location to {loc}")
+                    #geo_map.draw_path(path)
             # show render result in log
             #self.log_view.push(render_result.stderr)
         except BaseException as ex:
@@ -229,13 +235,13 @@ class WebServer:
             button.toggle_icon=toggle_icon
         button.update()
         
-    async def home(self):
+    async def home(self, client:Client):
         """Generates the home page with a map"""
         self.setup_menu()
         with ui.column():
             with ui.splitter() as splitter:
                 with splitter.before:  
-                    with leaflet().classes('w-full h-96') as os_map:
+                    with leaflet().classes('w-full h-128') as self.geo_map:
                         pass   
                 with splitter.after:
                         with ui.element("div").classes("w-full"):
@@ -249,6 +255,7 @@ class WebServer:
             
         self.setup_footer()        
         if self.args.input:
+            #await client.connected()
             await self.read_and_optionally_render(self.args.input)
         
     def settings(self):
