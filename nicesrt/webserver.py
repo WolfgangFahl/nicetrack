@@ -146,7 +146,8 @@ class WebServer:
         if os.path.exists(input_str):
             input_str=os.path.abspath(input_str)
         allowed_urls=[
-            "https://github.com/JuanIrache/DJI_SRT_Parser/tree/master/samples",
+            "https://raw.githubusercontent.com/JuanIrache/DJI_SRT_Parser/master/samples/",
+            "https://raw.githubusercontent.com/JuanIrache/dji-srt-viewer/master/samples/",
             self.examples_path(),
             self.root_path
         ]
@@ -250,7 +251,7 @@ class WebServer:
             if self.is_local:
                 self.tool_button(tooltip="open",icon="file_open",handler=self.open_file)
         with leaflet().classes('w-full h-96') as self.geo_map:
-            pass   
+                pass   
         
         self.setup_footer()        
         if self.args.input:

@@ -18,10 +18,10 @@ class leaflet(ui.element, component='leaflet.js'):
     see https://leafletjs.com/
     """
 
-    def __init__(self) -> None:
+    def __init__(self,version="1.7.1") -> None:
         super().__init__()
-        ui.add_head_html('<link href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" rel="stylesheet"/>')
-        ui.add_head_html('<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>')
+        ui.add_head_html(f'<link href="https://unpkg.com/leaflet@{version}/dist/leaflet.css" rel="stylesheet"/>')
+        ui.add_head_html(f'<script src="https://unpkg.com/leaflet@{version}/dist/leaflet.js"></script>')
 
     def set_location(self, location: Tuple[float, float], zoom_level:int=9) -> None:
         lat,lon=location

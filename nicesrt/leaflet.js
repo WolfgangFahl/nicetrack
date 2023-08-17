@@ -6,6 +6,12 @@ export default {
     L.tileLayer("http://{s}.tile.osm.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>',
     }).addTo(this.map);
+     // Contour layer from OpenTopoMap
+    L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://opentopomap.org">OpenTopoMap</a>',
+      opacity: 0.7  // You can adjust the opacity to make the contour lines more or less pronounced
+    }).addTo(this.map);
   },
   methods: {
     set_location(latitude, longitude,zoom_level) {

@@ -56,9 +56,9 @@ class SRT:
             matches = re.findall(self.patterns['bracketed_value'], text)
             for k, v1, v2, _ in matches:
                 if k in ["GPS"] and key == "latitude":
-                    return v1
-                elif k in ["GPS"] and key == "longitude":
                     return v2
+                elif k in ["GPS"] and key == "longitude":
+                    return v1
 
         return result
         
