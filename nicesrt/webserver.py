@@ -175,8 +175,7 @@ class WebServer:
             The button object.
         """
         with ui.button(name,icon=icon_name) as button:
-            # new_tab parameter not used yet
-            button.on("click",lambda: (ui.open(target)))
+            button.on("click",lambda: (ui.open(target,new_tab=new_tab)))
         return button
     
     
