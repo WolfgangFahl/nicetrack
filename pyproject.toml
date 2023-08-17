@@ -16,7 +16,7 @@ dependencies = [
 	# nicegui
     # fastapi
 	# uvicorn
-    "nicegui>=1.3.9",
+    "nicegui==1.3.5",
     # pysrt
     "pysrt"
 ]
