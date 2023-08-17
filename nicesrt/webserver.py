@@ -79,7 +79,7 @@ class WebServer:
                     loc=path[0]
                     geo_map.set_location(loc)
                     print(f"setting location to {loc}")
-                    #geo_map.draw_path(path)
+                    geo_map.draw_path(path)
             # show render result in log
             #self.log_view.push(render_result.stderr)
         except BaseException as ex:
@@ -110,6 +110,7 @@ class WebServer:
         Args:
             input_str (str): The input string representing a URL or local file.
         """
+        self.input_input.set_value(input_str)
         self.read_input(input_str)
         if self.render_on_load:
             await self.render(None)
@@ -241,7 +242,7 @@ class WebServer:
         with ui.column():
             with ui.splitter() as splitter:
                 with splitter.before:  
-                    with leaflet().classes('w-full h-128') as self.geo_map:
+                    with leaflet().classes('w-full h-96') as self.geo_map:
                         pass   
                 with splitter.after:
                         with ui.element("div").classes("w-full"):
