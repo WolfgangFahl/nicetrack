@@ -30,6 +30,8 @@ class WebServer:
         self.input=""
         self.srt=None
         self.srt_desc=None
+        self.geo_path=None
+        self.zoom_level=9
         
         @ui.page('/')
         async def home(client: Client):
@@ -61,6 +63,20 @@ class WebServer:
         if self.log_view:
             self.log_view.push(self.error_msg)
         print(self.error_msg,file=sys.stderr)
+        
+    def set_zoom_level(self,zoom_level):
+        self.zoom_level=zoom_level
+        with self.geo_map as geo_map:
+            geo_map.set_zoom_level(zoom_level)
+        
+    def mark_index(self,index):  
+        if self.geo_path:
+            loc=self.geo_path.path[index]
+            details=self.geo_path.as_dms(index)
+            if self.log_view:
+                self.log_view.push(f"{index}:{details}")
+            with self.geo_map as geo_map:
+                geo_map.set_location(loc,self.zoom_level)
 
     async def render(self, _click_args=None):
         """
@@ -74,6 +90,9 @@ class WebServer:
             srt_text=self.do_read_input(self.input)
             self.srt=SRT.from_text(srt_text)
             self.geo_path=self.srt.as_geopath()
+            path_len=len(self.geo_path.path)
+            self.time_slider._props['max']=path_len
+            self.time_slider.value=0
             details=self.geo_path.get_start_location_details()
             lat_str,lon_str=self.geo_path.as_dms(0)
             google_maps_link=self.geo_path.as_google_maps_link(0)
@@ -87,13 +106,14 @@ class WebServer:
 {srt_date}<br>
 {details}<br>
 <a href='{google_maps_link}' title='google maps' target='_blank'>{lat_str}{lon_str}</a>
+{path_len} points
 """
             self.srt_desc.content=desc
             with self.geo_map as geo_map:
                 path=self.geo_path.get_path()
                 if len(path)>0:
                     loc=path[0]
-                    geo_map.set_location(loc)
+                    geo_map.set_location(loc,zoom_level=self.zoom_level)
                     print(f"setting location to {loc}")
                     geo_map.draw_path(path)
             # show render result in log
@@ -272,7 +292,11 @@ class WebServer:
                     self.srt_desc=ui.html("")
            
         with leaflet().classes('w-full h-96') as self.geo_map:
-                pass   
+            pass
+        slider_props='label-always'
+        self.zoom_slider = ui.slider(min=1,max=20,step=1,value=self.zoom_level,on_change=lambda e: self.set_zoom_level(e.value))        .props(slider_props)
+        self.time_slider = ui.slider(min=0, max=100, step=1, value=50,on_change=lambda e: self.mark_index(e.value))        .props(slider_props)
+        self.log_view = ui.log(max_lines=20).classes('w-full h-40')        
         
         self.setup_footer()        
         if self.args.input:

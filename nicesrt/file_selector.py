@@ -51,7 +51,7 @@ class FileSelector():
         try:
             items = os.listdir(path)
             items=sorted(items)
-        except PermissionError:
+        except BaseException:
             items = []
         children = []
         item_counter = 1  # counter for generating child id
