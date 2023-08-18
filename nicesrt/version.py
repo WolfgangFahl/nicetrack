@@ -11,7 +11,7 @@ class Version(object):
     name = "nicesrt"
     version = nicesrt.__version__
     date = '2023-08-16'
-    updated = '2023-08-16'
+    updated = '2023-08-18'
     description = 'Nice Subtitle Telemetry handling',
     
     authors = 'Wolfgang Fahl'
