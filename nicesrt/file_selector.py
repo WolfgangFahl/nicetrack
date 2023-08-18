@@ -50,6 +50,7 @@ class FileSelector():
         id_string = '.'.join(map(str, id_path))
         try:
             items = os.listdir(path)
+            items=sorted(items)
         except PermissionError:
             items = []
         children = []
@@ -86,8 +87,6 @@ class FileSelector():
                 'value': path,
                 'children': children,
             }
-
-
 
     def find_node_by_id(self, tree: Dict[str, Union[str, List[Dict]]], id_to_find: str) -> Optional[Dict[str, Union[str, List[Dict]]]]:
         """
@@ -152,7 +151,3 @@ class FileSelector():
                     self.handler(file_path) 
                 # Close all nodes if it is a file
             self.expand([])
-   
-
-
-
