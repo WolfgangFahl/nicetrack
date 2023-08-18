@@ -104,7 +104,7 @@ class GeoPath:
         
         return lat_str, lon_str
 
-    def as_dms(self,index:int)->Tuple(str,str):
+    def as_dms(self,index:int)->Tuple[str,str]:
         """
         get path point at index in Degrees, Minutes, Seconds notation
         """
