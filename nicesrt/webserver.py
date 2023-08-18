@@ -82,7 +82,7 @@ class WebServer:
             except BaseException as _bex:
                 pass
             desc=f"{file_name}<br>\n{details}<br>\n{lat_str}{lon_str}"
-            self.srt_desc.text=desc
+            self.srt_desc.content=desc
             with self.geo_map as geo_map:
                 path=self.geo_path.get_path()
                 if len(path)>0:
@@ -263,7 +263,7 @@ class WebServer:
                     if self.is_local:
                         self.tool_button(tooltip="open",icon="file_open",handler=self.open_file)
                 with splitter.after:
-                    self.srt_desc=ui.label("")
+                    self.srt_desc=ui.html("")
            
         with leaflet().classes('w-full h-96') as self.geo_map:
                 pass   
