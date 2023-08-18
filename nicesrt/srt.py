@@ -3,6 +3,7 @@ Created on 2023-08-16
 
 @author: wf
 '''
+import datetime
 import pysrt
 from nicesrt.geo import GeoPath
 import re
@@ -61,6 +62,26 @@ class SRT:
                     return v1
 
         return result
+    
+    def extract_date(self, index):
+        """
+        Extracts the date from the subtitle at the specified index.
+        """
+        if index < len(self.subtitles):
+            # Define patterns for different date formats
+            patterns = [
+                (r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})', '%Y-%m-%d %H:%M:%S.%f'),
+                (r'(\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2})', '%Y.%m.%d %H:%M:%S')
+            ]
+            
+            text = self.subtitles[index].text
+            result=None
+            for pattern, fmt in patterns:
+                match = re.search(pattern, text)
+                if match:
+                    date_str = match.group(1)
+                    result= datetime.datetime.strptime(date_str, fmt)
+            return result
         
     def as_geopath(self) -> GeoPath:
         """

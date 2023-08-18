@@ -37,8 +37,7 @@ class Test_GeoPath(Basetest):
         see
         https://github.com/WolfgangFahl/nicesrt/issues/7
         """    
-        geo_path = GeoPath()
-        geo_path.add_point(-36.848461, 174.763336)  # Auckland
+        geo_path=GeoPath.from_points((-36.848461, 174.763336)) # Auckland
         details=geo_path.get_start_location_details()
         debug=self.debug
         debug=True
@@ -50,8 +49,7 @@ class Test_GeoPath(Basetest):
         """
         test conversion to degrees, minutes/seconds
         """
-        geo_path = GeoPath()
-        geo_path.add_point(25.19683, 55.27395) 
+        geo_path = GeoPath.from_points((25.19683, 55.27395)) # Burj Khalifa
         dms=geo_path.as_dms(0)
         debug=self.debug
         debug=True
@@ -59,4 +57,15 @@ class Test_GeoPath(Basetest):
             print(dms)
         expected="25° 11' 48.5880'' N", "55° 16' 26.2200'' E"
         self.assertEqual(expected, dms)
+        
+    def test_google_maps_link(self):
+        """
+        test getting a google maps link
+        """
+        geo_path = GeoPath.from_points((25.19683, 55.27395)) # Burj Khalifa
+        link=geo_path.as_google_maps_link(0)
+        debug=self.debug
+        debug=True
+        if debug:
+            print(link)
         

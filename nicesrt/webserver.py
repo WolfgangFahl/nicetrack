@@ -76,12 +76,18 @@ class WebServer:
             self.geo_path=self.srt.as_geopath()
             details=self.geo_path.get_start_location_details()
             lat_str,lon_str=self.geo_path.as_dms(0)
+            google_maps_link=self.geo_path.as_google_maps_link(0)
+            srt_date=self.srt.extract_date(0)
             file_name=""
             try:
                 file_name = self.input.split('/')[-1]
             except BaseException as _bex:
                 pass
-            desc=f"{file_name}<br>\n{details}<br>\n{lat_str}{lon_str}"
+            desc=f"""{file_name}<br>
+{srt_date}<br>
+{details}<br>
+<a href='{google_maps_link}' title='google maps' target='_blank'>{lat_str}{lon_str}</a>
+"""
             self.srt_desc.content=desc
             with self.geo_map as geo_map:
                 path=self.geo_path.get_path()

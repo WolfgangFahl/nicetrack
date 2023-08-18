@@ -78,7 +78,7 @@ ISO:100 Shutter:60 EV: Fnum:2.2""",1,-20.2533,16,149.0251)]
 
         srt_text = response.text
         file_name = srt_file_url.split('/')[-1]
-        self.check_text(srt_text,hint,file_name,debug)
+        return self.check_text(srt_text,hint,file_name,debug)
         
     def check_text(self,srt_text,hint,file_name,debug):
         srt=SRT.from_text(srt_text)
@@ -87,6 +87,7 @@ ISO:100 Shutter:60 EV: Fnum:2.2""",1,-20.2533,16,149.0251)]
         
         if debug:
             print(f"{hint}:{len(geo_path.path)}:{total_distance:.3f} km:{file_name}")
+        return srt
                 
     def test_drone_videos(self):
         """
@@ -104,7 +105,12 @@ ISO:100 Shutter:60 EV: Fnum:2.2""",1,-20.2533,16,149.0251)]
                     
     def test_sample(self):
         sample_url="https://raw.githubusercontent.com/JuanIrache/dji-srt-viewer/master/samples/sample4.SRT"
-        self.check_sample(sample_url,"sample4",debug=True)
+        srt=self.check_sample(sample_url,"sample4",debug=True)
+        d=srt.extract_date(0)
+        debug=True
+        if debug:
+            print(d)
+        self.assertEqual("2018-08-19 08:00:36",str(d))
         
     def test_samples(self):
         """

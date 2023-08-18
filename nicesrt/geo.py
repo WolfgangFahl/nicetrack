@@ -28,6 +28,17 @@ class GeoPath:
         logging.getLogger('OSMPythonTools').setLevel(logging.ERROR)     
         CachingStrategy.use(JSON, cacheDir=cacheDir)
         self.nominatim = Nominatim()  
+        
+    @classmethod
+    def from_points(cls,*points)->"GeoPath":
+        """
+        get a geopath for the given points
+        """
+        geo_path = GeoPath()
+        for point in points:
+            lat,lon=point
+            geo_path.add_point(lat, lon)
+        return geo_path
 
     def add_point(self, lat: float, lon: float) -> None:
         """Add a point to the geo path."""
@@ -112,6 +123,15 @@ class GeoPath:
         lat, lon = self.path[index]
         dms=self.lat_lon_to_dms_string(lat, lon)
         return dms
+    
+    def as_google_maps_link(self,index)->str:
+        """
+        get the google maps link
+        """
+        self.validate_index(index)
+        lat, lon = self.path[index]
+        link=f"https://maps.google.com/?q={lat},{lon}"
+        return link
     
     def get_start_location_details(self) -> str:
         """
