@@ -31,3 +31,32 @@ class Test_GeoPath(Basetest):
             print(f"Berlin-Paris-London: {berlin_london:.0f} km")
         self.assertAlmostEqual(877,berlin_paris,delta=1)
         self.assertAlmostEqual(1221,berlin_london,delta=1)
+        
+    def test_reverse_geocoding(self):
+        """
+        see
+        https://github.com/WolfgangFahl/nicesrt/issues/7
+        """    
+        geo_path = GeoPath()
+        geo_path.add_point(-36.848461, 174.763336)  # Auckland
+        details=geo_path.get_start_location_details()
+        debug=self.debug
+        debug=True
+        if debug:
+            print(details)
+        self.assertTrue("Auckland" in details)
+        
+    def test_dms(self):
+        """
+        test conversion to degrees, minutes/seconds
+        """
+        geo_path = GeoPath()
+        geo_path.add_point(25.19683, 55.27395) 
+        dms=geo_path.as_dms(0)
+        debug=self.debug
+        debug=True
+        if debug:
+            print(dms)
+        expected="25° 11' 48.5880'' N", "55° 16' 26.2200'' E"
+        self.assertEqual(expected, dms)
+        

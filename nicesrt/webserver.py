@@ -29,6 +29,7 @@ class WebServer:
         self.do_trace=True
         self.input=""
         self.srt=None
+        self.srt_desc=None
         
         @ui.page('/')
         async def home(client: Client):
@@ -73,6 +74,15 @@ class WebServer:
             srt_text=self.do_read_input(self.input)
             self.srt=SRT.from_text(srt_text)
             self.geo_path=self.srt.as_geopath()
+            details=self.geo_path.get_start_location_details()
+            lat_str,lon_str=self.geo_path.as_dms(0)
+            file_name=""
+            try:
+                file_name = self.input.split('/')[-1]
+            except BaseException as _bex:
+                pass
+            desc=f"{file_name}<br>\n{details}<br>\n{lat_str}{lon_str}"
+            self.srt_desc.text=desc
             with self.geo_map as geo_map:
                 path=self.geo_path.get_path()
                 if len(path)>0:
@@ -243,13 +253,18 @@ class WebServer:
         self.setup_menu()
     
         with ui.element("div").classes("w-full"):
-            self.example_selector=FileSelector(path=self.root_path,handler=self.read_and_optionally_render)
-            self.input_input=ui.input(
-                value=self.input,
-                on_change=self.input_changed).props("size=100")
-            self.tool_button(tooltip="reload",icon="refresh",handler=self.reload_file)    
-            if self.is_local:
-                self.tool_button(tooltip="open",icon="file_open",handler=self.open_file)
+            with ui.splitter() as splitter:
+                with splitter.before:
+                    self.example_selector=FileSelector(path=self.root_path,handler=self.read_and_optionally_render)
+                    self.input_input=ui.input(
+                         value=self.input,
+                         on_change=self.input_changed).props("size=100")
+                    self.tool_button(tooltip="reload",icon="refresh",handler=self.reload_file)    
+                    if self.is_local:
+                        self.tool_button(tooltip="open",icon="file_open",handler=self.open_file)
+                with splitter.after:
+                    self.srt_desc=ui.label("")
+           
         with leaflet().classes('w-full h-96') as self.geo_map:
                 pass   
         

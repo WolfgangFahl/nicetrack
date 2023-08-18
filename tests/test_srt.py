@@ -34,7 +34,6 @@ class Test_SRT(Basetest):
         srt_files = [file["download_url"] for file in files if file["name"].lower().endswith(".srt")]
         return srt_files
 
-
     def test_srt(self):
         """
         test some srt samples 
