@@ -3,8 +3,10 @@ Created on 2023-08-17
 
 @author: wf
 '''
-from nicesrt.geo import GeoPath
+from nicetrack.geo import GeoPath
 from tests.basetest import Basetest
+import os
+from pathlib import Path
 
 class Test_GeoPath(Basetest):
     """
@@ -35,7 +37,7 @@ class Test_GeoPath(Basetest):
     def test_reverse_geocoding(self):
         """
         see
-        https://github.com/WolfgangFahl/nicesrt/issues/7
+        https://github.com/WolfgangFahl/nicetrack/issues/7
         """    
         geo_path=GeoPath.from_points((-36.848461, 174.763336)) # Auckland
         details=geo_path.get_start_location_details()
@@ -65,7 +67,28 @@ class Test_GeoPath(Basetest):
         geo_path = GeoPath.from_points((25.19683, 55.27395)) # Burj Khalifa
         link=geo_path.as_google_maps_link(0)
         debug=self.debug
-        debug=True
+        #debug=True
         if debug:
             print(link)
+        self.assertTrue("q=25.19683,55.27395" in link)
+        
+        
+    def test_gpx(self):
+        """
+        """
+        # Getting the directory of the current script/file
+        current_dir = Path(__file__).parent
+    
+        # Forming the complete path to the GPX file
+        gpx_file_path = os.path.join(current_dir, '..', 'nicetrack_examples', 'gpx', '149759.gpx')
+        
+        with open(gpx_file_path, 'r') as gpx_file:
+            gpx_text=gpx_file.read()
+            geo_path=GeoPath.from_gpx(gpx_text)
+            debug=True
+            track_points=len(geo_path.path)
+            if debug:
+                print(f"{track_points} track points found")
+            self.assertEqual(2334,track_points)
+    
         

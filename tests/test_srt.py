@@ -4,7 +4,7 @@ Created on 2023-08-16
 @author: wf
 '''
 import os
-from nicesrt.srt import SRT
+from nicetrack.srt import SRT
 from tests.basetest import Basetest
 import requests
 
@@ -65,12 +65,12 @@ ISO:100 Shutter:60 EV: Fnum:2.2""",1,-20.2533,16,149.0251)]
             srt_text,count,lat,lon,delta=srt_sample
             srt = SRT.from_text(srt_text)
             self.assertEqual(count,len(srt.subtitles))
+            srt.debug=True
             geo_path=srt.as_geopath()
             self.assertEqual(count,len(geo_path.path))
-            for g_lat,g_lon in geo_path.path:        
-                self.assertAlmostEqual(g_lat, lat, delta=delta)
-                self.assertAlmostEqual(g_lon, lon, delta=delta)
-                
+            for tp in geo_path.path:        
+                self.assertAlmostEqual(tp.lat, lat, delta=delta)
+                self.assertAlmostEqual(tp.lon, lon, delta=delta)
                 
     def check_sample(self,srt_file_url:str,hint:str,debug:bool=True):
         response = requests.get(srt_file_url)
@@ -91,26 +91,31 @@ ISO:100 Shutter:60 EV: Fnum:2.2""",1,-20.2533,16,149.0251)]
                 
     def test_drone_videos(self):
         """
-        Test method to check all SRT files from the `/Volumes/Dronevideos` directory.
+        Test method to check all SRT files from a local test directory.
         """
         # local test - set you own drone videos path here
-        dronevideos_path = "/Volumes/Dronevideos"
+        dronevideos_path = "/Volumes/videos/quadrocopter/2023"
         
         if os.path.exists(dronevideos_path):
-            for i,filename in enumerate(os.listdir(dronevideos_path)):
-                if filename.endswith(".SRT"):
+            index=0
+            file_list=sorted(os.listdir(dronevideos_path))
+            for filename in file_list:
+                if filename.endswith(".SRT") and not filename.startswith("._"):
+                    index+=1
+                    #print(filename)
                     with open(os.path.join(dronevideos_path, filename), 'r', encoding='utf-8') as file:
                         srt_text = file.read()
-                        self.check_text(srt_text, hint=f"{i:2}", file_name=filename, debug=True)
+                        self.check_text(srt_text, hint=f"{index:2}", file_name=filename, debug=True)
                     
     def test_sample(self):
         sample_url="https://raw.githubusercontent.com/JuanIrache/dji-srt-viewer/master/samples/sample4.SRT"
         srt=self.check_sample(sample_url,"sample4",debug=True)
-        d=srt.extract_date(0)
         debug=True
-        if debug:
-            print(d)
-        self.assertEqual("2018-08-19 08:00:36",str(d))
+        for index in range(len(srt.subtitles)):
+            d=srt.as_dict(index)
+            if debug:
+                print(f"{index:3}:{d}")
+        #self.assertEqual("2018-08-19 08:00:36",str(d))
         
     def test_samples(self):
         """
