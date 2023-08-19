@@ -7,7 +7,7 @@ Created on 2021-08-19
 import getpass
 from unittest import TestCase
 import os
-from nicesrt.profiler import Profiler
+from nicetrack.profiler import Profiler
 
 class Basetest(TestCase):
     """
