@@ -87,12 +87,15 @@ class WebServer:
             click_args (object): The click event arguments.
         """
         try:
-            ui.notify(f"rendering {self.input}")
-            geo_text=self.do_read_input(self.input)
-            if self.input.lower().endswith(".srt"):
+            input_source=self.input
+            if input_source.startswith("https://cycle.travel/map/journey/"):
+                input_source=input_source.replace("/map/journey","/gpx")+".gpx"
+            ui.notify(f"rendering {input_source}")
+            geo_text=self.do_read_input(input_source)
+            if input_source.lower().endswith(".srt"):
                 self.srt=SRT.from_text(geo_text)
                 self.geo_path=self.srt.as_geopath()
-            elif self.input.lower().endswith(".gpx"):
+            elif input_source.lower().endswith(".gpx"):
                 self.geo_path=GeoPath.from_gpx(geo_text)
             path_len=len(self.geo_path.path)
             self.time_slider._props['max']=path_len
@@ -100,6 +103,7 @@ class WebServer:
             details=self.geo_path.get_start_location_details()
             lat_str,lon_str=self.geo_path.as_dms(0)
             geo_date=self.geo_path.path[0].timestamp
+            geo_date_html = "" if geo_date is None else f"{geo_date}<br>\n"
             google_maps_link=self.geo_path.as_google_maps_link(0)
             file_name=""
             try:
@@ -107,8 +111,7 @@ class WebServer:
             except BaseException as _bex:
                 pass
             desc=f"""{file_name}<br>
-{geo_date}<br>
-{details}<br>
+{geo_date_html}{details}<br>
 <a href='{google_maps_link}' title='google maps' target='_blank'>{lat_str}{lon_str}</a>
 {path_len} points
 """
@@ -211,7 +214,6 @@ class WebServer:
         with ui.button(name,icon=icon_name) as button:
             button.on("click",lambda: (ui.open(target,new_tab=new_tab)))
         return button
-    
     
     def tool_button(self,tooltip:str,icon:str,handler:callable=None,toggle_icon:str=None)->ui.button:
         """
@@ -323,6 +325,7 @@ class WebServer:
             "https://raw.githubusercontent.com/JuanIrache/DJI_SRT_Parser/master/samples/",
             "https://raw.githubusercontent.com/JuanIrache/dji-srt-viewer/master/samples/",
             "https://cycle.travel/gpx/",
+            "https://cycle.travel/map/journey/",
             self.examples_path(),
             self.root_path
         ]

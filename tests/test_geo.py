@@ -75,6 +75,7 @@ class Test_GeoPath(Basetest):
         
     def test_gpx(self):
         """
+        test GPX reading with GeoPath class
         """
         # Getting the directory of the current script/file
         current_dir = Path(__file__).parent
