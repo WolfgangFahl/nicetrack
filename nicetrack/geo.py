@@ -16,10 +16,61 @@ from datetime import datetime
 
 @dataclass
 class Trackpoint:
+    """
+    a 4D geographic trackpoint
+    """
     lat: float
     lon: float
     elevation: float = None
     timestamp: datetime = None
+    
+    def decimal_to_dms(self, decimal_degree: float):
+        degrees = int(decimal_degree)
+        minutes = int((decimal_degree - degrees) * 60)
+        seconds = (decimal_degree - degrees - minutes/60) * 3600.0
+        return degrees, minutes, seconds
+
+    def lat_lon_to_dms_string(self, latitude: float, longitude: float) -> str:
+        lat_degree, lat_minute, lat_second = self.decimal_to_dms(latitude)
+        lon_degree, lon_minute, lon_second = self.decimal_to_dms(longitude)
+        lat_direction = "N" if latitude >= 0 else "S"
+        lon_direction = "E" if longitude >= 0 else "W"
+        lat_str = f"{abs(lat_degree)}° {abs(lat_minute)}' {abs(lat_second):.4f}'' {lat_direction}"
+        lon_str = f"{abs(lon_degree)}° {abs(lon_minute)}' {abs(lon_second):.4f}'' {lon_direction}"
+        return lat_str, lon_str
+    
+    def as_dms(self)->str:
+        dms=self.lat_lon_to_dms_string(self.lat, self.lon)
+        return dms
+    
+    def as_google_maps_link(self)->str:
+        link = f"https://maps.google.com/?q={self.lat},{self.lon}"
+        return link
+    
+    def as_google_maps_anchor(self)->str:
+        google_maps_link=self.as_google_maps_link()
+        lat_str,lon_str=self.as_dms()
+        a=f"<a href='{google_maps_link}' title='google maps' target='_blank'>{lat_str}{lon_str}</a>"
+        return a
+    
+    def get_details(self,nominatim):
+        """
+        get the location details via nominatim
+        """
+        result = nominatim.query(f'{self.lat}, {self.lon}').toJSON()
+        location=result[0]
+        details = location.get('display_name', "Location not found")
+        return details
+    
+    def get_info(self,nominatim,with_details:bool=True)->str:
+        if with_details:
+            details=self.get_details(nominatim)
+        else:
+            details=""
+        geo_date_html = "" if self.timestamp is None else f"{self.timestamp}<br>\n"
+        google_maps_a=self.as_google_maps_anchor()
+        info=f"{geo_date_html}{details}{google_maps_a}"
+        return info
 
 class GeoPath:
     """
@@ -101,37 +152,22 @@ class GeoPath:
             total_distance = self.distance(0, len(self.path) - 1)
         return total_distance
 
-    def decimal_to_dms(self, decimal_degree: float):
-        degrees = int(decimal_degree)
-        minutes = int((decimal_degree - degrees) * 60)
-        seconds = (decimal_degree - degrees - minutes/60) * 3600.0
-        return degrees, minutes, seconds
-
-    def lat_lon_to_dms_string(self, latitude: float, longitude: float) -> str:
-        lat_degree, lat_minute, lat_second = self.decimal_to_dms(latitude)
-        lon_degree, lon_minute, lon_second = self.decimal_to_dms(longitude)
-        lat_direction = "N" if latitude >= 0 else "S"
-        lon_direction = "E" if longitude >= 0 else "W"
-        lat_str = f"{abs(lat_degree)}° {abs(lat_minute)}' {abs(lat_second):.4f}'' {lat_direction}"
-        lon_str = f"{abs(lon_degree)}° {abs(lon_minute)}' {abs(lon_second):.4f}'' {lon_direction}"
-        return lat_str, lon_str
 
     def as_dms(self, index: int) -> Tuple[str, str]:
         self.validate_index(index)
-        lat, lon = self.path[index].lat, self.path[index].lon
-        dms = self.lat_lon_to_dms_string(lat, lon)
+        tp = self.path[index]
+        dms = tp.as_dms()
         return dms
 
     def as_google_maps_link(self, index: int) -> str:
         self.validate_index(index)
-        lat, lon = self.path[index].lat, self.path[index].lon
-        link = f"https://maps.google.com/?q={lat},{lon}"
+        tp=self.path[index]
+        link=tp.as_google_maps_link()
         return link
 
     def get_start_location_details(self) -> str:
         if len(self.path) < 1:
             return "No points in path"
-        lat, lon = self.path[0].lat, self.path[0].lon
-        location = self.nominatim.query(f'{lat}, {lon}').toJSON()[0]
-        details = location.get('display_name', "Location not found")
+        tp=self.path[0]
+        details=tp.get_details(self.nominatim)
         return details

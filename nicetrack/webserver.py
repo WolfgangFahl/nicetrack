@@ -69,13 +69,20 @@ class WebServer:
         with self.geo_map as geo_map:
             geo_map.set_zoom_level(zoom_level)
         
-    def mark_index(self,index):  
+    def mark_trackpoint_at_index(self,index:int):  
+        """
+        mark the trackpoint at the given index
+        
+        Args:
+            index(int): the index of the position
+        """
         if self.geo_path:
+            # get the trackpoint
+            self.geo_path.validate_index(index)
             tp=self.geo_path.path[index]
+            info=tp.get_info(self.geo_path.nominatim,with_details=False)
             loc=(tp.lat,tp.lon)
-            details=self.geo_path.as_dms(index)
-            if self.log_view:
-                self.log_view.push(f"{index}:{details}")
+            self.trackpoint_desc.content=info
             with self.geo_map as geo_map:
                 geo_map.set_location(loc,self.zoom_level)
 
@@ -100,19 +107,15 @@ class WebServer:
             path_len=len(self.geo_path.path)
             self.time_slider._props['max']=path_len
             self.time_slider.value=0
-            details=self.geo_path.get_start_location_details()
-            lat_str,lon_str=self.geo_path.as_dms(0)
-            geo_date=self.geo_path.path[0].timestamp
-            geo_date_html = "" if geo_date is None else f"{geo_date}<br>\n"
-            google_maps_link=self.geo_path.as_google_maps_link(0)
             file_name=""
+            tp_index=self.time_slider.value
+            tp=self.geo_path.path[tp_index]
+            info=tp.get_info(self.geo_path.nominatim)
             try:
                 file_name = self.input.split('/')[-1]
             except BaseException as _bex:
                 pass
-            desc=f"""{file_name}<br>
-{geo_date_html}{details}<br>
-<a href='{google_maps_link}' title='google maps' target='_blank'>{lat_str}{lon_str}</a>
+            desc=f"""{file_name}<br>{info}<br>
 {path_len} points
 """
             self.geo_desc.content=desc
@@ -290,12 +293,13 @@ class WebServer:
                         self.tool_button(tooltip="open",icon="file_open",handler=self.open_file)
                 with splitter.after:
                     self.geo_desc=ui.html("")
+                    self.trackpoint_desc=ui.html("")    
            
         with leaflet().classes('w-full h-96') as self.geo_map:
             pass
         slider_props='label-always'
         self.zoom_slider = ui.slider(min=1,max=20,step=1,value=self.zoom_level,on_change=lambda e: self.set_zoom_level(e.value))        .props(slider_props)
-        self.time_slider = ui.slider(min=0, max=100, step=1, value=50,on_change=lambda e: self.mark_index(e.value))        .props(slider_props)
+        self.time_slider = ui.slider(min=0, max=100, step=1, value=50,on_change=lambda e: self.mark_trackpoint_at_index(e.value))        .props(slider_props)
         self.log_view = ui.log(max_lines=20).classes('w-full h-40')        
         
         self.setup_footer()        
