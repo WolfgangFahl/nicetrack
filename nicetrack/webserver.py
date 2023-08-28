@@ -3,7 +3,8 @@ Created on 2023-06-19
 
 @author: wf
 """
-from typing import Optional
+from typing import Optional, Annotated
+from fastapi import HTTPException, Header
 from nicetrack.version import Version
 from nicetrack.leaflet import leaflet
 from nicetrack.srt import SRT
@@ -11,6 +12,8 @@ from nicetrack.geo import GeoPath
 from nicetrack.local_filepicker import LocalFilePicker
 from nicetrack.file_selector import FileSelector
 from nicegui import ui, Client
+from nicetrack.video import Video
+from nicetrack.video_stream import VideoStream
 
 import os
 import sys
@@ -35,12 +38,15 @@ class WebServer:
         
         @ui.page('/')
         async def home(client: Client):
-            await self.home(client)
+            return await self.home(client)
             
         @ui.page('/settings')
-        def settings():
-            self.settings()
+        async def settings():
+            return await self.settings()
             
+        @ui.page('/video/{video_name}')
+        async def video(video_name: str, range_header: str = Header(None)):
+            return await self.video(video_name, range_header)
             
     @classmethod
     def examples_path(cls)->str:
@@ -68,7 +74,19 @@ class WebServer:
         self.zoom_level=zoom_level
         with self.geo_map as geo_map:
             geo_map.set_zoom_level(zoom_level)
-        
+            
+    async def video(self,video_name:str,range_header: str):
+        # Check if not local
+        if not self.is_local:
+            raise HTTPException(status_code=400, detail="Videos only available in local mode of server")
+        # Check if the video name exists in the root path
+        video_source=os.path.join(self.root_path, video_name)
+        if not os.path.exists(video_source):
+            raise HTTPException(status_code=404, detail="Video not found")
+        video_stream=VideoStream(video_source)
+        stream_response=video_stream.get_video(range_header)
+        return stream_response
+    
     def mark_trackpoint_at_index(self,index:int):  
         """
         mark the trackpoint at the given index
@@ -181,8 +199,18 @@ class WebServer:
             pick_list = await LocalFilePicker('~', multiple=False)
             if pick_list and len(pick_list)>0:
                 input_file=pick_list[0]
-                await self.read_and_optionally_render(input_file)
+                await self.read_and_optionally_render(input_file)          
     pass
+
+    async def on_play(self):
+        """
+        play the corresponding video
+        """
+        if self.input.endswith(".SRT"):
+            video_path=self.input.replace(".SRT",".MP4")
+            video=Video(video_path)
+            video.play()
+            pass
          
     async def reload_file(self):
         """
@@ -291,6 +319,7 @@ class WebServer:
                     self.tool_button(tooltip="reload",icon="refresh",handler=self.reload_file)    
                     if self.is_local:
                         self.tool_button(tooltip="open",icon="file_open",handler=self.open_file)
+                        self.tool_button(tooltip="play",icon="play_circle",handler=self.on_play)
                 with splitter.after:
                     self.geo_desc=ui.html("")
                     self.trackpoint_desc=ui.html("")    

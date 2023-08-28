@@ -22,7 +22,9 @@ dependencies = [
     # pysrt
     "pysrt",
     # nominatim in https://pypi.org/project/OSMPythonTools/
-    "OSMPythonTools"
+    "OSMPythonTools",
+    # https://pypi.org/project/python-vlc/
+    "python-vlc"
 
 ]
 
