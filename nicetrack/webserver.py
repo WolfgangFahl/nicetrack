@@ -323,9 +323,12 @@ class WebServer:
                 with splitter.after:
                     self.geo_desc=ui.html("")
                     self.trackpoint_desc=ui.html("")    
-           
-        with leaflet().classes('w-full h-96') as self.geo_map:
-            pass
+        with ui.splitter() as splitter:
+                with splitter.before:
+                    with leaflet().classes('w-full h-96') as self.geo_map:
+                        pass
+                with splitter.after:
+                    self.video_view=ui.video()    
         slider_props='label-always'
         self.zoom_slider = ui.slider(min=1,max=20,step=1,value=self.zoom_level,on_change=lambda e: self.set_zoom_level(e.value))        .props(slider_props)
         self.time_slider = ui.slider(min=0, max=100, step=1, value=50,on_change=lambda e: self.mark_trackpoint_at_index(e.value))        .props(slider_props)

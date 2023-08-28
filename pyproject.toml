@@ -24,7 +24,9 @@ dependencies = [
     # nominatim in https://pypi.org/project/OSMPythonTools/
     "OSMPythonTools",
     # https://pypi.org/project/python-vlc/
-    "python-vlc"
+    "python-vlc",
+    # https://pypi.org/project/PyQt5/
+    "PyQt5"
 
 ]
 
