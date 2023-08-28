@@ -3,7 +3,7 @@ Created on 2023-06-19
 
 @author: wf
 """
-from typing import Optional, Annotated
+from typing import Optional
 from fastapi import HTTPException, Header
 from nicetrack.version import Version
 from nicetrack.leaflet import leaflet
@@ -328,7 +328,7 @@ class WebServer:
                     with leaflet().classes('w-full h-96') as self.geo_map:
                         pass
                 with splitter.after:
-                    self.video_view=ui.video()    
+                    self.video_view=ui.html("")    
         slider_props='label-always'
         self.zoom_slider = ui.slider(min=1,max=20,step=1,value=self.zoom_level,on_change=lambda e: self.set_zoom_level(e.value))        .props(slider_props)
         self.time_slider = ui.slider(min=0, max=100, step=1, value=50,on_change=lambda e: self.mark_trackpoint_at_index(e.value))        .props(slider_props)
