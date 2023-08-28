@@ -207,9 +207,15 @@ class WebServer:
         play the corresponding video
         """
         if self.input.endswith(".SRT"):
+            # pyQT video playing
             video_path=self.input.replace(".SRT",".MP4")
-            video=Video(video_path)
-            video.play()
+            #video=Video(video_path)
+            #video.play()
+            if self.video_view:
+                video_name=os.path.basename(video_path)
+                video_url=f"/video/{video_name}"
+                self.video_view=ui.video(video_url)
+                pass
             pass
          
     async def reload_file(self):
@@ -323,7 +329,7 @@ class WebServer:
                 with splitter.after:
                     self.geo_desc=ui.html("")
                     self.trackpoint_desc=ui.html("")    
-        with ui.splitter() as splitter:
+            with ui.splitter() as splitter:
                 with splitter.before:
                     with leaflet().classes('w-full h-96') as self.geo_map:
                         pass
