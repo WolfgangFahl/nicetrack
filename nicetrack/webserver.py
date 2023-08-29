@@ -82,7 +82,7 @@ class WebServer:
         # Check if the video name exists in the root path
         video_source=os.path.join(self.root_path, video_name)
         if not os.path.exists(video_source):
-            raise HTTPException(status_code=404, detail="Video not found")
+            raise HTTPException(status_code=404, detail=f"Video {video_source} not found")
         video_stream=VideoStream(video_source)
         stream_response=video_stream.get_video(range_header)
         return stream_response
@@ -206,17 +206,20 @@ class WebServer:
         """
         play the corresponding video
         """
-        if self.input.endswith(".SRT"):
-            # pyQT video playing
-            video_path=self.input.replace(".SRT",".MP4")
-            #video=Video(video_path)
-            #video.play()
-            if self.video_view:
-                video_name=os.path.basename(video_path)
-                video_url=f"/video/{video_name}"
-                self.video_view=ui.video(video_url)
+        try:
+            if self.input.endswith(".SRT"):
+                # pyQT video playing
+                video_path=self.input.replace(".SRT",".MP4")
+                #video=Video(video_path)
+                #video.play()
+                if self.video_view:
+                    video_name=os.path.basename(video_path)
+                    video_url=f"/video/{video_name}"
+                    self.video_view=ui.video(video_url)
+                    pass
                 pass
-            pass
+        except BaseException as ex:
+            self.handle_exception(ex, self.trace)
          
     async def reload_file(self):
         """
