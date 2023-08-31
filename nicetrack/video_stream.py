@@ -6,6 +6,7 @@ Created on 27.08.2023
 from fastapi import Header, HTTPException
 from starlette.responses import FileResponse, StreamingResponse
 import os
+import cv2
 
 class VideoStream():
     """
@@ -15,6 +16,28 @@ class VideoStream():
     def __init__(self, video_path):
         self.video_path = video_path
         self.video_size = os.path.getsize(video_path)
+        
+    def generate_frames(self, start_time: float = 0.0, fps: float = 30.0):
+        cap = cv2.VideoCapture(self.video_path)
+        
+        # Calculate the starting frame based on start_time and fps
+        start_frame = int(start_time * fps)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+        
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                cap.release()
+                break
+            _, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+
+
+    async def video_feed(self, start_time: float = 0.0, fps: float = 30.0):
+        frame_gen = self.generate_frames(start_time=start_time, fps=fps)
+        return StreamingResponse(frame_gen, media_type="multipart/x-mixed-replace; boundary=frame")
 
     def parse_range_header(self, range_header: str) -> tuple:
         """

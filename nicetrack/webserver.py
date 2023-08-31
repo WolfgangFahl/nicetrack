@@ -4,7 +4,7 @@ Created on 2023-06-19
 @author: wf
 """
 from typing import Optional
-from fastapi import HTTPException, Header
+from fastapi import HTTPException, Header, Query
 from nicetrack.version import Version
 from nicetrack.leaflet import leaflet
 from nicetrack.srt import SRT
@@ -19,6 +19,34 @@ import os
 import sys
 import requests
 import traceback
+
+class InteractiveVideoView():
+    """
+    create a video view
+    """
+    
+    def __init__(self,video_path:str,root_path:str=None):
+        if root_path:
+            if video_path.startswith(root_path):
+                video_path=video_path.replace(root_path, "")
+                if video_path.startswith("/"):
+                    # replace first slash
+                    video_path=video_path.replace("/","",1)
+                else:
+                    video_path=os.path.basename(video_path)
+        self.video_url=f"/video_feed/{video_path}"
+        self.svg_content = ''
+    
+    def get_view(self,container):
+        with container:
+            self.view=ui.interactive_image(
+                source = self.video_url, #instead of providing here, binded below. Binding takes care of updating feed if URL changes
+                content=self.svg_content,
+                events=['click', 'mousedown', 'mouseup'], 
+                cross=True
+            )
+            #.bind_source_from(self, 'video_url').bind_content(self, 'svg_content')
+        return self.view
 
 class WebServer:
     """
@@ -44,10 +72,14 @@ class WebServer:
         async def settings():
             return await self.settings()
             
-        @ui.page('/video/{video_name}')
-        async def video(video_name: str, range_header: str = Header(None)):
-            return await self.video(video_name, range_header)
+        @ui.page('/video_play/{video_path:path}')
+        async def video_play(video_path: str, range_header: str = Header(None)):
+            return await self.video_play(video_path, range_header)
             
+        @ui.page('/video_feed/{video_path:path}')    
+        async def video_feed(video_path:str,start_time: float = Query(0.0, description="Start timestamp in seconds"), fps: float = Query(30.0, description="Frames per second of the video")):
+            return await self.video_feed(video_path,start_time=start_time, fps=fps)
+
     @classmethod
     def examples_path(cls)->str:
         # the root directory (default: examples)
@@ -75,16 +107,25 @@ class WebServer:
         with self.geo_map as geo_map:
             geo_map.set_zoom_level(zoom_level)
             
-    async def video(self,video_name:str,range_header: str):
+    def get_video_stream(self,video_path:str):
         # Check if not local
         if not self.is_local:
             raise HTTPException(status_code=400, detail="Videos only available in local mode of server")
         # Check if the video name exists in the root path
-        video_source=os.path.join(self.root_path, video_name)
+        video_source=os.path.join(self.root_path, video_path)
         if not os.path.exists(video_source):
             raise HTTPException(status_code=404, detail=f"Video {video_source} not found")
         video_stream=VideoStream(video_source)
+        return video_stream
+    
+    async def video_play(self,video_path:str,range_header: str):
+        video_stream=self.get_video_stream(video_path)
         stream_response=video_stream.get_video(range_header)
+        return stream_response
+    
+    async def video_feed(self,video_path:str,start_time:float=0.0,fps:int=30.0):
+        video_stream=self.get_video_stream(video_path)
+        stream_response=await video_stream.video_feed(start_time,fps)
         return stream_response
     
     def mark_trackpoint_at_index(self,index:int):  
@@ -206,6 +247,8 @@ class WebServer:
         """
         play the corresponding video
         """
+        if not self.input:
+            return
         try:
             if self.input.endswith(".SRT"):
                 # pyQT video playing
@@ -213,13 +256,12 @@ class WebServer:
                 #video=Video(video_path)
                 #video.play()
                 if self.video_view:
-                    video_name=os.path.basename(video_path)
-                    video_url=f"/video/{video_name}"
-                    self.video_view=ui.video(video_url)
+                    self.ivv=InteractiveVideoView(video_path,self.root_path)
+                    self.video_view=self.ivv.get_view(self.video_container)
                     pass
                 pass
         except BaseException as ex:
-            self.handle_exception(ex, self.trace)
+            self.handle_exception(ex, self.do_trace)
          
     async def reload_file(self):
         """
@@ -336,7 +378,7 @@ class WebServer:
                 with splitter.before:
                     with leaflet().classes('w-full h-96') as self.geo_map:
                         pass
-                with splitter.after:
+                with splitter.after as self.video_container:
                     self.video_view=ui.html("")    
         slider_props='label-always'
         self.zoom_slider = ui.slider(min=1,max=20,step=1,value=self.zoom_level,on_change=lambda e: self.set_zoom_level(e.value))        .props(slider_props)
