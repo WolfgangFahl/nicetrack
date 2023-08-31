@@ -12,41 +12,14 @@ from nicetrack.geo import GeoPath
 from nicetrack.local_filepicker import LocalFilePicker
 from nicetrack.file_selector import FileSelector
 from nicegui import ui, Client
-from nicetrack.video import Video
+#from nicetrack.video import Video
 from nicetrack.video_stream import VideoStream
+from nicetrack.video_stepper import VideoStepper
 
 import os
 import sys
 import requests
 import traceback
-
-class InteractiveVideoView():
-    """
-    create a video view
-    """
-    
-    def __init__(self,video_path:str,root_path:str=None):
-        if root_path:
-            if video_path.startswith(root_path):
-                video_path=video_path.replace(root_path, "")
-                if video_path.startswith("/"):
-                    # replace first slash
-                    video_path=video_path.replace("/","",1)
-                else:
-                    video_path=os.path.basename(video_path)
-        self.video_url=f"/video_feed/{video_path}"
-        self.svg_content = ''
-    
-    def get_view(self,container):
-        with container:
-            self.view=ui.interactive_image(
-                source = self.video_url, #instead of providing here, binded below. Binding takes care of updating feed if URL changes
-                content=self.svg_content,
-                events=['click', 'mousedown', 'mouseup'], 
-                cross=True
-            )
-            #.bind_source_from(self, 'video_url').bind_content(self, 'svg_content')
-        return self.view
 
 class WebServer:
     """
@@ -63,6 +36,7 @@ class WebServer:
         self.geo_desc=None
         self.geo_path=None
         self.zoom_level=9
+        self.video_stepper=None
         
         @ui.page('/')
         async def home(client: Client):
@@ -80,6 +54,10 @@ class WebServer:
         async def video_feed(video_path:str,start_time: float = Query(0.0, description="Start timestamp in seconds"), fps: float = Query(30.0, description="Frames per second of the video")):
             return await self.video_feed(video_path,start_time=start_time, fps=fps)
 
+        @ui.page('/video_step/{video_path:path}/{frame_index:int}')
+        async def video_step(video_path: str, frame_index:int=0):
+            return await self.video_step(video_path, frame_index)
+        
     @classmethod
     def examples_path(cls)->str:
         # the root directory (default: examples)
@@ -128,6 +106,12 @@ class WebServer:
         stream_response=await video_stream.video_feed(start_time,fps)
         return stream_response
     
+    async def video_step(self,video_path:str,frame_index:int=0):
+        if self.video_stepper is None:
+            self.video_stepper=VideoStepper(video_path,self.root_path)
+        stream_response=await self.video_stepper.stream_image(frame_index)
+        return stream_response
+ 
     def mark_trackpoint_at_index(self,index:int):  
         """
         mark the trackpoint at the given index
@@ -253,12 +237,7 @@ class WebServer:
             if self.input.endswith(".SRT"):
                 # pyQT video playing
                 video_path=self.input.replace(".SRT",".MP4")
-                #video=Video(video_path)
-                #video.play()
-                if self.video_view:
-                    self.ivv=InteractiveVideoView(video_path,self.root_path)
-                    self.video_view=self.ivv.get_view(self.video_container)
-                    pass
+                self.video_stepper.set_video_path(video_path)
                 pass
         except BaseException as ex:
             self.handle_exception(ex, self.do_trace)
@@ -379,7 +358,8 @@ class WebServer:
                     with leaflet().classes('w-full h-96') as self.geo_map:
                         pass
                 with splitter.after as self.video_container:
-                    self.video_view=ui.html("")    
+                    self.video_stepper=VideoStepper(None,self.root_path) 
+                    self.video_view=self.video_stepper.get_view(self.video_container)
         slider_props='label-always'
         self.zoom_slider = ui.slider(min=1,max=20,step=1,value=self.zoom_level,on_change=lambda e: self.set_zoom_level(e.value))        .props(slider_props)
         self.time_slider = ui.slider(min=0, max=100, step=1, value=50,on_change=lambda e: self.mark_trackpoint_at_index(e.value))        .props(slider_props)

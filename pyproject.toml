@@ -21,6 +21,8 @@ dependencies = [
     "gpxpy",
     # pysrt
     "pysrt",
+    # numpy
+    "numpy",
     # nominatim in https://pypi.org/project/OSMPythonTools/
     "OSMPythonTools",
     # https://pypi.org/project/python-vlc/
