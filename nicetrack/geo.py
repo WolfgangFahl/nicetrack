@@ -171,3 +171,27 @@ class GeoPath:
         tp=self.path[0]
         details=tp.get_details(self.nominatim)
         return details
+    
+    def get_video_frame_index(self, index: int, fps: int) -> int:
+        """
+        Return a video frame index based on a geo_path index and fps parameter using the timestamps.
+        
+        Args:
+        - geo_index (int): The specific index on the GeoPath.
+        - fps (int): Frames per second of the video.
+        
+        Returns:
+        - int: Corresponding frame index.
+        """
+        self.validate_index(index)
+        
+        start_time = self.path[0].timestamp
+        target_time = self.path[index].timestamp
+
+        # Calculate time difference in seconds
+        delta_seconds = (target_time - start_time).total_seconds()
+
+        # Calculate frame index based on the time difference and fps
+        frame_index = int(delta_seconds * fps)
+        
+        return frame_index

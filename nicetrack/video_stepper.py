@@ -39,8 +39,10 @@ class VideoStepper:
         self.video_path=video_path
         if video_path is None or not os.path.exists(video_path):
             self.video_size=0
+            self.base_url=None
             self.fps=1
-            self.url=ui.interactive_image("https://picsum.photos/id/28/1024/768")    
+            # dummy image
+            self.url="https://picsum.photos/id/28/1024/768"  
             return
         self.video_size = os.path.getsize(video_path)
         if self.root_path:
@@ -51,9 +53,14 @@ class VideoStepper:
                     video_path = video_path.replace("/", "", 1)
                 else:
                     video_path = os.path.basename(video_path)
-        self.frame_index=0
+        self.base_url=f"/video_step/{video_path}"   
         self.cap = cv2.VideoCapture(self.video_path)
-        self.url = f"/video_step/{video_path}/{self.frame_index}"
+        self.set_frame_index(0)
+        
+    def set_frame_index(self,frame_index:int=0):
+        self.frame_index=frame_index
+        if self.base_url:
+            self.url = f"{self.base_url}/{self.frame_index}"
         
     def get_view(self,container):
         with container:

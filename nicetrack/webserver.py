@@ -128,6 +128,11 @@ class WebServer:
             self.trackpoint_desc.content=info
             with self.geo_map as geo_map:
                 geo_map.set_location(loc,self.zoom_level)
+            if self.video_stepper:
+                # @TODO make configurable
+                fps=30
+                frame_index=self.geo_path.get_video_frame_index(index, fps)
+                self.video_stepper.set_frame_index(frame_index)    
 
     async def render(self, _click_args=None):
         """
