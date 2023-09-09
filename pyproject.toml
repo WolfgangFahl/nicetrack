@@ -30,7 +30,7 @@ dependencies = [
     # https://pypi.org/project/PyQt5/
     "PyQt5",
     # 
-    "opencv-python"
+    "opencv-python",
     # https://github.com/PyAV-Org/PyAV
     "av"
 
