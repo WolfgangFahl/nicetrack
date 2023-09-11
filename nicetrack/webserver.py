@@ -17,9 +17,6 @@ from nicetrack.video_stream import VideoStream
 from nicetrack.video_stepper import VideoStepper
 from nicetrack.video_stepper_av import VideoStepperAV
 import os
-import sys
-import requests
-import traceback
 from ngwidgets.webserver import NiceGuiWebserver
 
 class WebServer(NiceGuiWebserver):
@@ -30,7 +27,7 @@ class WebServer(NiceGuiWebserver):
 
     def __init__(self):
         """Constructs all the necessary attributes for the WebServer object."""
-        super().init()
+        NiceGuiWebserver.__init__(self)
         self.is_local=False
         self.do_trace=True
         self.input=""
