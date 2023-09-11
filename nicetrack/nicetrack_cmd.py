@@ -10,6 +10,7 @@ from argparse import RawDescriptionHelpFormatter
 import traceback
 import webbrowser
 from nicetrack.webserver import WebServer
+from ngwidgets.cmd import WebserverCmd
 
 def getArgParser(description:str,version_msg)->ArgumentParser:
     """

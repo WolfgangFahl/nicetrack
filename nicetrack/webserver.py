@@ -20,8 +20,9 @@ import os
 import sys
 import requests
 import traceback
+from ngwidgets.webserver import NiceGuiWebserver
 
-class WebServer:
+class WebServer(NiceGuiWebserver):
     """
     WebServer class that manages the server 
     
@@ -29,8 +30,8 @@ class WebServer:
 
     def __init__(self):
         """Constructs all the necessary attributes for the WebServer object."""
+        super().init()
         self.is_local=False
-        self.log_view=None
         self.do_trace=True
         self.input=""
         self.geo_desc=None
@@ -64,21 +65,6 @@ class WebServer:
         path = os.path.join(os.path.dirname(__file__), '../nicetrack_examples')
         path = os.path.abspath(path)
         return path
- 
-    def handle_exception(self, e: BaseException, trace: Optional[bool] = False):
-        """Handles an exception by creating an error message.
-
-        Args:
-            e (BaseException): The exception to handle.
-            trace (bool, optional): Whether to include the traceback in the error message. Default is False.
-        """
-        if trace:
-            self.error_msg = str(e) + "\n" + traceback.format_exc()
-        else:
-            self.error_msg = str(e)
-        if self.log_view:
-            self.log_view.push(self.error_msg)
-        print(self.error_msg,file=sys.stderr)
         
     def set_zoom_level(self,zoom_level):
         self.zoom_level=zoom_level
@@ -179,25 +165,6 @@ class WebServer:
         except BaseException as ex:
             self.handle_exception(ex,self.do_trace)  
             
-    def do_read_input(self, input_str: str):
-        """Reads the given input.
-
-        Args:
-            input_str (str): The input string representing a URL or local path.
-        """
-        if input_str.startswith('http://') or input_str.startswith('https://'):
-            response = requests.get(input_str)
-            if response.status_code == 200:
-                return response.text
-            else:
-                raise Exception(f'Unable to retrieve data from URL: {input_str}')
-        else:
-            if os.path.exists(input_str):
-                with open(input_str, 'r') as file:
-                    return file.read()
-            else:
-                raise Exception(f'File does not exist: {input_str}')
-    
     async def read_and_optionally_render(self,input_str):
         """Reads the given input and optionally renders the given input
 
@@ -264,42 +231,7 @@ class WebServer:
         else:    
             await self.read_and_optionally_render(self.input)
     
-    def link_button(self, name: str, target: str, icon_name: str,new_tab:bool=True):
-        """
-        Creates a button with a specified icon that opens a target URL upon being clicked.
-    
-        Args:
-            name (str): The name to be displayed on the button.
-            target (str): The target URL that should be opened when the button is clicked.
-            icon_name (str): The name of the icon to be displayed on the button.
-            new_tab(bool): if True open link in new tab
-    
-        Returns:
-            The button object.
-        """
-        with ui.button(name,icon=icon_name) as button:
-            button.on("click",lambda: (ui.open(target,new_tab=new_tab)))
-        return button
-    
-    def tool_button(self,tooltip:str,icon:str,handler:callable=None,toggle_icon:str=None)->ui.button:
-        """
-        Creates an  button with icon that triggers a specified function upon being clicked.
-    
-        Args:
-            tooltip (str): The tooltip to be displayed.
-            icon (str): The name of the icon to be displayed on the button.
-            handler (function): The function to be called when the button is clicked.
-            toggle_icon (str): The name of an alternative icon to be displayed when the button is clicked.
-    
-        Returns:
-            ui.button: The icon button object.
-            
-        valid icons may be found at:    
-            https://fonts.google.com/icons
-        """
-        icon_button=ui.button("",icon=icon, color='primary').tooltip(tooltip).on("click",handler=handler)  
-        icon_button.toggle_icon=toggle_icon
-        return icon_button   
+  
         
     def setup_menu(self):
         """Adds a link to the project's GitHub page in the web server's menu."""
@@ -324,21 +256,6 @@ class WebServer:
         """
         self.input=cargs.value
         pass
-    
-    def toggle_icon(self,button:ui.button):
-        """
-        toggle the icon of the given button
-        
-        Args:
-            ui.button: the button that needs the icon to be toggled
-        """
-        if hasattr(button,"toggle_icon"):
-            # exchange icon with toggle icon
-            toggle_icon=button._props["icon"]
-            icon=button.toggle_icon
-            button._props["icon"]=icon
-            button.toggle_icon=toggle_icon
-        button.update()
         
     async def home(self, client:Client):
         """Generates the home page with a map"""
