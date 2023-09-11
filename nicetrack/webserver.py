@@ -9,7 +9,7 @@ from nicetrack.version import Version
 from nicetrack.leaflet import leaflet
 from nicetrack.srt import SRT
 from nicetrack.geo import GeoPath
-from nicetrack.local_filepicker import LocalFilePicker
+from ngwidgets.local_filepicker import LocalFilePicker
 from nicetrack.file_selector import FileSelector
 from nicegui import ui, Client
 #from nicetrack.video import Video
