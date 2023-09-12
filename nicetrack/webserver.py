@@ -3,13 +3,11 @@ Created on 2023-06-19
 
 @author: wf
 """
-from typing import Optional
 from fastapi import HTTPException, Header, Query
 from nicetrack.version import Version
 from nicetrack.leaflet import leaflet
 from nicetrack.srt import SRT
 from nicetrack.geo import GeoPath
-from ngwidgets.local_filepicker import LocalFilePicker
 from nicetrack.file_selector import FileSelector
 from nicegui import ui, Client
 #from nicetrack.video import Video
@@ -17,9 +15,11 @@ from nicetrack.video_stream import VideoStream
 from nicetrack.video_stepper import VideoStepper
 from nicetrack.video_stepper_av import VideoStepperAV
 import os
-from ngwidgets.webserver import NiceGuiWebserver
 
-class WebServer(NiceGuiWebserver):
+from ngwidgets.input_webserver import InputWebserver
+from ngwidgets.webserver import WebserverConfig
+
+class WebServer(InputWebserver):
     """
     WebServer class that manages the server 
     
@@ -27,10 +27,9 @@ class WebServer(NiceGuiWebserver):
 
     def __init__(self):
         """Constructs all the necessary attributes for the WebServer object."""
-        NiceGuiWebserver.__init__(self)
-        self.is_local=False
-        self.do_trace=True
-        self.input=""
+        copy_right="(c)2023 Wolfgang Fahl"
+        config=WebserverConfig(copy_right=copy_right,version=Version())
+        InputWebserver.__init__(self,config=config)
         self.geo_desc=None
         self.geo_path=None
         self.zoom_level=9
@@ -162,40 +161,6 @@ class WebServer(NiceGuiWebserver):
         except BaseException as ex:
             self.handle_exception(ex,self.do_trace)  
             
-    async def read_and_optionally_render(self,input_str):
-        """Reads the given input and optionally renders the given input
-
-        Args:
-            input_str (str): The input string representing a URL or local file.
-        """
-        self.input_input.set_value(input_str)
-        self.read_input(input_str)
-        if self.render_on_load:
-            await self.render(None)
-        
-    def read_input(self, input_str: str):
-        """Reads the given input and handles any exceptions.
-
-        Args:
-            input_str (str): The input string representing a URL or local file.
-        """
-        try:
-            ui.notify(f"reading {input_str}")
-            if self.log_view:
-                self.log_view.clear()
-            self.error_msg = None
-        except BaseException as e:
-            self.handle_exception(e, self.do_trace)
-            
-    async def open_file(self) -> None:
-        """Opens a Local filer picker dialog and reads the selected input file."""
-        if self.is_local:
-            pick_list = await LocalFilePicker('~', multiple=False)
-            if pick_list and len(pick_list)>0:
-                input_file=pick_list[0]
-                await self.read_and_optionally_render(input_file)          
-    pass
-
     async def on_play(self):
         """
         play the corresponding video
@@ -210,50 +175,7 @@ class WebServer(NiceGuiWebserver):
                 pass
         except BaseException as ex:
             self.handle_exception(ex, self.do_trace)
-         
-    async def reload_file(self):
-        """
-        reload the input file
-        """
-        input_str=self.input
-        if os.path.exists(input_str):
-            input_str=os.path.abspath(input_str)
-        allowed=self.is_local
-        if not self.is_local:
-            for allowed_url in self.allowed_urls:
-                if input_str.startswith(allowed_url):
-                    allowed=True
-        if not allowed:
-            ui.notify("only white listed URLs and Path inputs are allowed")
-        else:    
-            await self.read_and_optionally_render(self.input)
-    
-  
-        
-    def setup_menu(self):
-        """Adds a link to the project's GitHub page in the web server's menu."""
-        with ui.header() as self.header:
-            self.link_button("home","/","home")
-            self.link_button("settings","/settings","settings")
-            self.link_button("github",Version.cm_url,"bug_report")
-            self.link_button("chat",Version.chat_url,"chat")
-            self.link_button("help",Version.doc_url,"help")
-    
-    def setup_footer(self):
-        """
-        setup the footer
-        """
-        with ui.footer() as self.footer:
-            ui.label("(c)2023 Wolfgang Fahl")
-            ui.link("Powered by nicegui","https://nicegui.io/").style("color: #fff") 
-  
-    def input_changed(self,cargs):
-        """
-        react on changed input
-        """
-        self.input=cargs.value
-        pass
-        
+               
     async def home(self, client:Client):
         """Generates the home page with a map"""
         self.setup_menu()
@@ -282,31 +204,10 @@ class WebServer(NiceGuiWebserver):
         slider_props='label-always'
         self.zoom_slider = ui.slider(min=1,max=20,step=1,value=self.zoom_level,on_change=lambda e: self.set_zoom_level(e.value))        .props(slider_props)
         self.time_slider = ui.slider(min=0, max=100, step=1, value=50,on_change=lambda e: self.mark_trackpoint_at_index(e.value))        .props(slider_props)
-        self.log_view = ui.log(max_lines=20).classes('w-full h-40')        
+          
+        await self.setup_footer()
         
-        self.setup_footer()        
-        if self.args.input:
-            #await client.connected()
-            await self.read_and_optionally_render(self.args.input)
-        
-    def settings(self):
-        """Generates the settings page with a link to the project's GitHub page."""
-        self.setup_menu()
-        ui.checkbox('debug with trace', value=True).bind_value(self, "do_trace")
-        ui.checkbox('render on load',value=self.render_on_load).bind_value(self,"render_on_load")
-        self.setup_footer()
-       
-    def run(self, args):
-        """Runs the UI of the web server.
-
-        Args:
-            args (list): The command line arguments.
-        """
-        self.args=args
-        self.input=args.input
-        self.is_local=args.local
-        self.root_path=os.path.abspath(args.root_path) 
-        self.render_on_load=args.render_on_load
+    def configure_run(self):
         self.allowed_urls=[
             "https://raw.githubusercontent.com/JuanIrache/DJI_SRT_Parser/master/samples/",
             "https://raw.githubusercontent.com/JuanIrache/dji-srt-viewer/master/samples/",
@@ -315,4 +216,4 @@ class WebServer(NiceGuiWebserver):
             self.examples_path(),
             self.root_path
         ]
-        ui.run(title=Version.name, host=args.host, port=args.port, show=args.client,reload=False)
+  
