@@ -5,7 +5,7 @@ https://github.com/zauberzeug/nicegui/blob/main/examples/map/main.py
 
 @author: rodja
 '''
-from nicetrack.leaflet import leaflet  # this module wraps the JavaScript lib leafletjs.com into an easy-to-use NiceGUI element
+from ngwidgets import leaflet.leaflet  # this module wraps the JavaScript lib leafletjs.com into an easy-to-use NiceGUI element
 
 from nicegui import Client, ui
 

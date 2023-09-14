@@ -5,10 +5,10 @@ Created on 2023-06-19
 """
 from fastapi import HTTPException, Header, Query
 from nicetrack.version import Version
-from nicetrack.leaflet import leaflet
+from ngwidgets.leaflet import leaflet
 from nicetrack.srt import SRT
 from nicetrack.geo import GeoPath
-from nicetrack.file_selector import FileSelector
+from ngwidgets.file_selector import FileSelector
 from nicegui import ui, Client
 #from nicetrack.video import Video
 from nicetrack.video_stream import VideoStream
@@ -24,11 +24,19 @@ class WebServer(InputWebserver):
     WebServer class that manages the server 
     
     """
-
-    def __init__(self):
-        """Constructs all the necessary attributes for the WebServer object."""
+    
+    @classmethod
+    def get_config(cls):
         copy_right="(c)2023 Wolfgang Fahl"
-        config=WebserverConfig(copy_right=copy_right,version=Version())
+        config=WebserverConfig(copy_right=copy_right,version=Version(),default_port=9859)
+        return config
+  
+    def __init__(self):
+        """
+        Constructs all the necessary attributes for the 
+        WebServer object.
+        """
+        config=WebServer.get_config()
         InputWebserver.__init__(self,config=config)
         self.geo_desc=None
         self.geo_path=None
