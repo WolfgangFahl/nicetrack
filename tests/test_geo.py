@@ -4,7 +4,7 @@ Created on 2023-08-17
 @author: wf
 '''
 from nicetrack.geo import GeoPath
-from tests.basetest import Basetest
+from basetest import Basetest
 import os
 from pathlib import Path
 

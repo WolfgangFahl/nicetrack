@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import time
 import unittest
-from tests.basetest import Basetest
+from basetest import Basetest
 from nicetrack.video_stepper import VideoStepper  # Modify this import based on where your VideoStepper class is
 from nicetrack.video_stepper_av import VideoStepperAV  # Modify this import based on where your AV-based VideoStepper class is
 
