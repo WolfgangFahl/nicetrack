@@ -11,7 +11,7 @@ class Version(object):
     name = "nicetrack"
     version = nicetrack.__version__
     date = '2023-08-16'
-    updated = '2023-08-18'
+    updated = '2023-11-18'
     description = 'Nice 3D Track handling'
     
     authors = 'Wolfgang Fahl'

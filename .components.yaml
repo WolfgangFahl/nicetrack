@@ -1,0 +1,13 @@
+# Components
+# WF 2023-12-18
+components:
+- name: video_stream.py
+  source: /nicetrack/video_stream.py
+  issue: 14
+  demo_url: http://nicetrack.bitplan.com
+  demo_image_url: https://github.com/WolfgangFahl/nicetrack/assets/1336221/4580227d-01e7-4cda-aa2b-a0897508810f
+- name: map.py
+  source: /nicetrack/map.py
+  issue: 4
+  demo_url: http://nicetrack.bitplan.com
+  demo_image_url: https://github.com/WolfgangFahl/nicetrack/assets/1336221/aa504ec2-12b6-4bbe-9be6-ebd7ad7f4568
