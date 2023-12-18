@@ -39,13 +39,15 @@ class Test_GeoPath(Basetest):
         see
         https://github.com/WolfgangFahl/nicetrack/issues/7
         """    
+        # avoid forbidden status
         geo_path=GeoPath.from_points((-36.848461, 174.763336)) # Auckland
-        details=geo_path.get_start_location_details()
-        debug=self.debug
-        debug=True
-        if debug:
-            print(details)
-        self.assertTrue("Auckland" in details)
+        if not self.inPublicCI():
+            details=geo_path.get_start_location_details()
+            debug=self.debug
+            debug=True
+            if debug:
+                print(details)
+            self.assertTrue("Auckland" in details)
         
     def test_dms(self):
         """
