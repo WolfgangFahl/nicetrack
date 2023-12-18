@@ -5,7 +5,8 @@ build-backend = "hatchling.build"
 [project]
 name = "nicetrack"
 description = "nicegui based 3D Track handling"
-keywords = ["nicegui", "telemetry"‚"3D track", "drone", "video", "gpx","srt"]
+keywords = ["nicegui", "telemetry", "3D track", "drone", "video", "gpx", "srt"]
+
 authors = [
   {name = "Wolfgang Fahl", email = "wf@bitplan.com"}
 ]
