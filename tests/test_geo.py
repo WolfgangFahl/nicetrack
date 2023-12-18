@@ -4,7 +4,7 @@ Created on 2023-08-17
 @author: wf
 '''
 from nicetrack.geo import GeoPath
-from basetest import Basetest
+from ngwidgets.basetest import Basetest
 import os
 from pathlib import Path
 

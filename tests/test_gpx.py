@@ -6,7 +6,7 @@ Created on 2023-08-19
 import os
 from pathlib import Path
 import gpxpy
-from basetest import Basetest
+from ngwidgets.basetest import Basetest
 
 class Test_GPX(Basetest):
     """

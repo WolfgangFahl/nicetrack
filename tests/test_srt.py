@@ -5,7 +5,7 @@ Created on 2023-08-16
 '''
 import os
 from nicetrack.srt import SRT
-from basetest import Basetest
+from ngwidgets.basetest import Basetest
 import requests
 
 class Test_SRT(Basetest):
