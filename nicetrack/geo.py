@@ -1,33 +1,37 @@
-'''
+"""
 Created on 16.08.2023
 
 @author: wf
-'''
-from typing import List, Tuple
-import math
+"""
+
 import logging
+import math
 import os
-from OSMPythonTools.nominatim import Nominatim
-from OSMPythonTools.cachingStrategy import CachingStrategy, JSON
-from pathlib import Path
-import gpxpy
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
+from typing import List, Tuple
+
+import gpxpy
+from OSMPythonTools.cachingStrategy import JSON, CachingStrategy
+from OSMPythonTools.nominatim import Nominatim
+
 
 @dataclass
 class Trackpoint:
     """
     a 4D geographic trackpoint
     """
+
     lat: float
     lon: float
     elevation: float = None
     timestamp: datetime = None
-    
+
     def decimal_to_dms(self, decimal_degree: float):
         degrees = int(decimal_degree)
         minutes = int((decimal_degree - degrees) * 60)
-        seconds = (decimal_degree - degrees - minutes/60) * 3600.0
+        seconds = (decimal_degree - degrees - minutes / 60) * 3600.0
         return degrees, minutes, seconds
 
     def lat_lon_to_dms_string(self, latitude: float, longitude: float) -> str:
@@ -38,45 +42,47 @@ class Trackpoint:
         lat_str = f"{abs(lat_degree)}° {abs(lat_minute)}' {abs(lat_second):.4f}'' {lat_direction}"
         lon_str = f"{abs(lon_degree)}° {abs(lon_minute)}' {abs(lon_second):.4f}'' {lon_direction}"
         return lat_str, lon_str
-    
-    def as_dms(self)->str:
-        dms=self.lat_lon_to_dms_string(self.lat, self.lon)
+
+    def as_dms(self) -> str:
+        dms = self.lat_lon_to_dms_string(self.lat, self.lon)
         return dms
-    
-    def as_google_maps_link(self)->str:
+
+    def as_google_maps_link(self) -> str:
         link = f"https://maps.google.com/?q={self.lat},{self.lon}"
         return link
-    
-    def as_google_maps_anchor(self)->str:
-        google_maps_link=self.as_google_maps_link()
-        lat_str,lon_str=self.as_dms()
-        a=f"<a href='{google_maps_link}' title='google maps' target='_blank'>{lat_str}{lon_str}</a>"
+
+    def as_google_maps_anchor(self) -> str:
+        google_maps_link = self.as_google_maps_link()
+        lat_str, lon_str = self.as_dms()
+        a = f"<a href='{google_maps_link}' title='google maps' target='_blank'>{lat_str}{lon_str}</a>"
         return a
-    
-    def get_details(self,nominatim):
+
+    def get_details(self, nominatim):
         """
         get the location details via nominatim
         """
-        result = nominatim.query(f'{self.lat}, {self.lon}').toJSON()
-        location=result[0]
-        details = location.get('display_name', "Location not found")
+        result = nominatim.query(f"{self.lat}, {self.lon}").toJSON()
+        location = result[0]
+        details = location.get("display_name", "Location not found")
         return details
-    
-    def get_info(self,nominatim,with_details:bool=True)->str:
+
+    def get_info(self, nominatim, with_details: bool = True) -> str:
         if with_details:
-            details=self.get_details(nominatim)
+            details = self.get_details(nominatim)
         else:
-            details=""
+            details = ""
         geo_date_html = "" if self.timestamp is None else f"{self.timestamp}<br>\n"
-        google_maps_a=self.as_google_maps_anchor()
-        info=f"{geo_date_html}{details}{google_maps_a}"
+        google_maps_a = self.as_google_maps_anchor()
+        info = f"{geo_date_html}{details}{google_maps_a}"
         return info
+
 
 class GeoPath:
     """
     a 3D Path of geographic coordinates in lat/lon notation
     """
-    def __init__(self, name: str=None, cacheDir: str=None):
+
+    def __init__(self, name: str = None, cacheDir: str = None):
         self.name = name
         self.path: List[Trackpoint] = []
         if cacheDir is None:
@@ -85,7 +91,7 @@ class GeoPath:
         self.cacheDir = cacheDir
         if not os.path.exists(self.cacheDir):
             os.makedirs(self.cacheDir)
-        logging.getLogger('OSMPythonTools').setLevel(logging.ERROR)
+        logging.getLogger("OSMPythonTools").setLevel(logging.ERROR)
         CachingStrategy.use(JSON, cacheDir=self.cacheDir)
         self.nominatim = Nominatim()
 
@@ -107,15 +113,23 @@ class GeoPath:
         for track in gpx.tracks:
             for segment in track.segments:
                 for point in segment.points:
-                    geo_path.add_point(point.latitude, point.longitude, point.elevation, point.time)
+                    geo_path.add_point(
+                        point.latitude, point.longitude, point.elevation, point.time
+                    )
         return geo_path
 
-    def add_point(self, lat: float, lon: float, elevation: float = None, timestamp: datetime = None) -> None:
+    def add_point(
+        self,
+        lat: float,
+        lon: float,
+        elevation: float = None,
+        timestamp: datetime = None,
+    ) -> None:
         self.path.append(Trackpoint(lat, lon, elevation, timestamp))
 
     def get_path(self) -> List[Trackpoint]:
         return self.path
-    
+
     def as_tuple_list(self) -> List[Tuple[float, float]]:
         return [(point.lat, point.lon) for point in self.path]
 
@@ -127,7 +141,10 @@ class GeoPath:
         lon2 = math.radians(point2.lon)
         dlat = lat2 - lat1
         dlon = lon2 - lon1
-        a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+        )
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
         distance = R * c
         return distance
@@ -152,7 +169,6 @@ class GeoPath:
             total_distance = self.distance(0, len(self.path) - 1)
         return total_distance
 
-
     def as_dms(self, index: int) -> Tuple[str, str]:
         self.validate_index(index)
         tp = self.path[index]
@@ -161,30 +177,30 @@ class GeoPath:
 
     def as_google_maps_link(self, index: int) -> str:
         self.validate_index(index)
-        tp=self.path[index]
-        link=tp.as_google_maps_link()
+        tp = self.path[index]
+        link = tp.as_google_maps_link()
         return link
 
     def get_start_location_details(self) -> str:
         if len(self.path) < 1:
             return "No points in path"
-        tp=self.path[0]
-        details=tp.get_details(self.nominatim)
+        tp = self.path[0]
+        details = tp.get_details(self.nominatim)
         return details
-    
+
     def get_video_frame_index(self, index: int, fps: int) -> int:
         """
         Return a video frame index based on a geo_path index and fps parameter using the timestamps.
-        
+
         Args:
         - geo_index (int): The specific index on the GeoPath.
         - fps (int): Frames per second of the video.
-        
+
         Returns:
         - int: Corresponding frame index.
         """
         self.validate_index(index)
-        
+
         start_time = self.path[0].timestamp
         target_time = self.path[index].timestamp
 
@@ -193,5 +209,5 @@ class GeoPath:
 
         # Calculate frame index based on the time difference and fps
         frame_index = int(delta_seconds * fps)
-        
+
         return frame_index

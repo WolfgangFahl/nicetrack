@@ -24,16 +24,16 @@ Author: Saveliy Yusufov, Columbia University, sy2685@columbia.edu
 Date: 25 December 2018
 """
 
-import platform
 import os
+import platform
 import sys
 
-from PyQt5 import QtWidgets, QtGui, QtCore
 import vlc
+from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Player(QtWidgets.QMainWindow):
-    """A simple Media Player using VLC and Qt
-    """
+    """A simple Media Player using VLC and Qt"""
 
     def __init__(self, master=None):
         QtWidgets.QMainWindow.__init__(self, master)
@@ -51,13 +51,12 @@ class Player(QtWidgets.QMainWindow):
         self.is_paused = False
 
     def create_ui(self):
-        """Set up the user interface, signals & slots
-        """
+        """Set up the user interface, signals & slots"""
         self.widget = QtWidgets.QWidget(self)
         self.setCentralWidget(self.widget)
 
         # In this widget, the video will be drawn
-        if platform.system() == "Darwin": # for MacOS
+        if platform.system() == "Darwin":  # for MacOS
             self.videoframe = QtWidgets.QMacCocoaViewContainer(0)
         else:
             self.videoframe = QtWidgets.QFrame()
@@ -116,8 +115,7 @@ class Player(QtWidgets.QMainWindow):
         self.timer.timeout.connect(self.update_ui)
 
     def play_pause(self):
-        """Toggle play/pause status
-        """
+        """Toggle play/pause status"""
         if self.mediaplayer.is_playing():
             self.mediaplayer.pause()
             self.playbutton.setText("Play")
@@ -134,17 +132,17 @@ class Player(QtWidgets.QMainWindow):
             self.is_paused = False
 
     def stop(self):
-        """Stop player
-        """
+        """Stop player"""
         self.mediaplayer.stop()
         self.playbutton.setText("Play")
 
     def open_file(self):
-        """Open a media file in a MediaPlayer
-        """
+        """Open a media file in a MediaPlayer"""
 
         dialog_txt = "Choose Media File"
-        filename = QtWidgets.QFileDialog.getOpenFileName(self, dialog_txt, os.path.expanduser('~'))
+        filename = QtWidgets.QFileDialog.getOpenFileName(
+            self, dialog_txt, os.path.expanduser("~")
+        )
         if not filename:
             return
 
@@ -164,23 +162,21 @@ class Player(QtWidgets.QMainWindow):
         # video would be displayed in it's own window). This is platform
         # specific, so we must give the ID of the QFrame (or similar object) to
         # vlc. Different platforms have different functions for this
-        if platform.system() == "Linux": # for Linux using the X Server
+        if platform.system() == "Linux":  # for Linux using the X Server
             self.mediaplayer.set_xwindow(int(self.videoframe.winId()))
-        elif platform.system() == "Windows": # for Windows
+        elif platform.system() == "Windows":  # for Windows
             self.mediaplayer.set_hwnd(int(self.videoframe.winId()))
-        elif platform.system() == "Darwin": # for MacOS
+        elif platform.system() == "Darwin":  # for MacOS
             self.mediaplayer.set_nsobject(int(self.videoframe.winId()))
 
         self.play_pause()
 
     def set_volume(self, volume):
-        """Set the volume
-        """
+        """Set the volume"""
         self.mediaplayer.audio_set_volume(volume)
 
     def set_position(self):
-        """Set the movie position according to the position slider.
-        """
+        """Set the movie position according to the position slider."""
 
         # The vlc MediaPlayer needs a float value between 0 and 1, Qt uses
         # integer variables, so you need a factor; the higher the factor, the
@@ -211,14 +207,15 @@ class Player(QtWidgets.QMainWindow):
             if not self.is_paused:
                 self.stop()
 
+
 def main():
-    """Entry point for our simple vlc player
-    """
+    """Entry point for our simple vlc player"""
     app = QtWidgets.QApplication(sys.argv)
     player = Player()
     player.show()
     player.resize(640, 480)
     sys.exit(app.exec_())
+
 
 if __name__ == "__main__":
     main()

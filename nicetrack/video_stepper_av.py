@@ -1,16 +1,18 @@
 import io
 import os
+
 import av
-from fastapi.responses import StreamingResponse
 from fastapi import HTTPException
+from fastapi.responses import StreamingResponse
 from nicegui import ui
+
 
 class VideoStepperAV:
     """
     Display a video step by step (frame-by-frame) using PyAV for video decoding.
     """
 
-    def __init__(self, video_path: str=None, root_path: str=None, fps: int = 30):
+    def __init__(self, video_path: str = None, root_path: str = None, fps: int = 30):
         self.container = None
         self.root_path = root_path
         self.video_path = None
@@ -50,10 +52,13 @@ class VideoStepperAV:
 
     def get_view(self, container):
         with container:
-            self.view = ui.interactive_image(
-                events=['click', 'mousedown', 'mouseup'],
-                cross=True
-            ).bind_source_from(self, 'url').bind_content(self, 'svg_content')
+            self.view = (
+                ui.interactive_image(
+                    events=["click", "mousedown", "mouseup"], cross=True
+                )
+                .bind_source_from(self, "url")
+                .bind_content(self, "svg_content")
+            )
         return self.view
 
     def get_frame(self, frame_index: int = None):
@@ -68,8 +73,8 @@ class VideoStepperAV:
         framerate = video_stream.average_rate
         time_base = video_stream.time_base
         sec = int(frame_num / framerate)
-        self.container.seek(sec * 1000000, whence='time', backward=True)
-        
+        self.container.seek(sec * 1000000, whence="time", backward=True)
+
         # Get the next available frame
         for _ in range(sec, frame_num):
             frame = next(self.container.decode(video=0))
@@ -89,18 +94,24 @@ class VideoStepperAV:
         # If frame exists, encode it to the desired format
         if frame_img is not None:
             buffer = io.BytesIO()
-            img_format = "jpeg" if img_format == "jpg" else img_format  # Handle 'jpg' -> 'jpeg'
+            img_format = (
+                "jpeg" if img_format == "jpg" else img_format
+            )  # Handle 'jpg' -> 'jpeg'
             frame_img.save(buffer, format=img_format)
             return buffer.getvalue()
         return None
 
-    async def stream_image(self, frame_index: int = 0, img_format: str = "jpg") -> StreamingResponse:
+    async def stream_image(
+        self, frame_index: int = 0, img_format: str = "jpg"
+    ) -> StreamingResponse:
         if not self.video_size:
             raise HTTPException(status_code=404, detail=f"Video not available")
 
         image_bytes = self.get_image(frame_index, img_format)
 
         if image_bytes:
-            return StreamingResponse(io.BytesIO(image_bytes), media_type=f"image/{img_format}")
+            return StreamingResponse(
+                io.BytesIO(image_bytes), media_type=f"image/{img_format}"
+            )
         else:
             raise HTTPException(status_code=404, detail="Image not found")
