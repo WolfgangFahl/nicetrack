@@ -9,7 +9,7 @@ import os
 from fastapi import Header, HTTPException, Query
 from ngwidgets.file_selector import FileSelector
 from ngwidgets.input_webserver import InputWebserver, InputWebSolution
-from ngwidgets.leaflet import leaflet
+from ngwidgets.leaflet_map import LeafletMap
 from ngwidgets.webserver import WebserverConfig
 from nicegui import Client, ui
 
@@ -111,7 +111,7 @@ class NicetrackSolution(InputWebSolution):
     def set_zoom_level(self, zoom_level):
         self.zoom_level = zoom_level
         with self.geo_map as geo_map:
-            geo_map.set_zoom_level(zoom_level)
+            geo_map.zoom = zoom_level
 
     def get_video_stream(self, video_path: str):
         # Check if not local
@@ -161,7 +161,8 @@ class NicetrackSolution(InputWebSolution):
             loc = (tp.lat, tp.lon)
             self.trackpoint_desc.content = info
             with self.geo_map as geo_map:
-                geo_map.set_location(loc, self.zoom_level)
+                geo_map.center = loc
+                geo_map.zoom = self.zoom_level
             if self.video_stepper:
                 # @TODO make configurable
                 fps = 30
@@ -205,7 +206,8 @@ class NicetrackSolution(InputWebSolution):
                 path_2d = self.geo_path.as_tuple_list()
                 if len(path_2d) > 0:
                     loc = path_2d[0]
-                    geo_map.set_location(loc, zoom_level=self.zoom_level)
+                    geo_map.center = loc
+                    geo_map.zoom = self.zoom_level
                     print(f"setting location to {loc}")
                     geo_map.draw_path(path_2d)
             # show render result in log
@@ -228,56 +230,59 @@ class NicetrackSolution(InputWebSolution):
         except BaseException as ex:
             self.handle_exception(ex, self.do_trace)
 
-    async def home(self, client: Client):
+    async def home(self):
         """Generates the home page with a map"""
-        self.setup_menu()
 
-        with ui.element("div").classes("w-full"):
-            with ui.splitter() as splitter:
-                with splitter.before:
-                    self.example_selector = FileSelector(
-                        path=self.root_path, handler=self.read_and_optionally_render
-                    )
-                    self.input_input = ui.input(
-                        value=self.input, on_change=self.input_changed
-                    ).props("size=100")
-                    self.tool_button(
-                        tooltip="reload", icon="refresh", handler=self.reload_file
-                    )
-                    if self.is_local:
-                        self.tool_button(
-                            tooltip="open", icon="file_open", handler=self.open_file
+        def setup_home():
+            """ """
+            with ui.element("div").classes("w-full"):
+                with ui.splitter() as splitter:
+                    with splitter.before:
+                        self.example_selector = FileSelector(
+                            path=self.root_path, handler=self.read_and_optionally_render
                         )
+                        self.input_input = ui.input(
+                            value=self.input, on_change=self.input_changed
+                        ).props("size=100")
                         self.tool_button(
-                            tooltip="play", icon="play_circle", handler=self.on_play
+                            tooltip="reload", icon="refresh", handler=self.reload_file
                         )
-                with splitter.after:
-                    self.geo_desc = ui.html("")
-                    self.trackpoint_desc = ui.html("")
-            with ui.splitter() as splitter:
-                with splitter.before:
-                    with leaflet().classes("w-full h-96") as self.geo_map:
-                        pass
-                with splitter.after as self.video_container:
-                    self.video_stepper = VideoStepper(None, self.root_path)
-                    self.video_view = self.video_stepper.get_view(self.video_container)
-        slider_props = "label-always"
-        self.zoom_slider = ui.slider(
-            min=1,
-            max=20,
-            step=1,
-            value=self.zoom_level,
-            on_change=lambda e: self.set_zoom_level(e.value),
-        ).props(slider_props)
-        self.time_slider = ui.slider(
-            min=0,
-            max=100,
-            step=1,
-            value=50,
-            on_change=lambda e: self.mark_trackpoint_at_index(e.value),
-        ).props(slider_props)
+                        if self.is_local:
+                            self.tool_button(
+                                tooltip="open", icon="file_open", handler=self.open_file
+                            )
+                            self.tool_button(
+                                tooltip="play", icon="play_circle", handler=self.on_play
+                            )
+                    with splitter.after:
+                        self.geo_desc = ui.html("")
+                        self.trackpoint_desc = ui.html("")
+                with ui.splitter() as splitter:
+                    with splitter.before:
+                        with LeafletMap(classes="w-full h-96") as self.geo_map:
+                            pass
+                    with splitter.after as self.video_container:
+                        self.video_stepper = VideoStepper(None, self.root_path)
+                        self.video_view = self.video_stepper.get_view(
+                            self.video_container
+                        )
+            slider_props = "label-always"
+            self.zoom_slider = ui.slider(
+                min=1,
+                max=20,
+                step=1,
+                value=self.zoom_level,
+                on_change=lambda e: self.set_zoom_level(e.value),
+            ).props(slider_props)
+            self.time_slider = ui.slider(
+                min=0,
+                max=100,
+                step=1,
+                value=50,
+                on_change=lambda e: self.mark_trackpoint_at_index(e.value),
+            ).props(slider_props)
 
-        await self.setup_footer()
+        await self.setup_content_div(setup_home)
 
     def configure_run(self):
         self.allowed_urls = [

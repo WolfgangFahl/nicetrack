@@ -4,9 +4,12 @@ Created on 2023-06-19
 @author: wf
 """
 
+from dataclasses import dataclass
+
 import nicetrack
 
 
+@dataclass
 class Version(object):
     """
     Version handling for nicetrack
@@ -15,7 +18,7 @@ class Version(object):
     name = "nicetrack"
     version = nicetrack.__version__
     date = "2023-08-16"
-    updated = "2023-12-18"
+    updated = "2024-12-07"
     description = "Nice 3D Track handling"
 
     authors = "Wolfgang Fahl"
