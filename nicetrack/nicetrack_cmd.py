@@ -40,7 +40,7 @@ class NiceTrackCmd(WebserverCmd):
             "-rp",
             "--root_path",
             default=WebServer.examples_path(),
-            help="path to pdf files [default: %(default)s]",
+            help="path to files [default: %(default)s]",
         )
         return parser
 

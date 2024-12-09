@@ -18,6 +18,7 @@ from nicetrack.srt import SRT
 from nicetrack.version import Version
 from nicetrack.video_stepper import VideoStepper
 from nicetrack.video_stepper_av import VideoStepperAV
+from nicetrack.map import Map
 
 # from nicetrack.video import Video
 from nicetrack.video_stream import VideoStream
@@ -77,6 +78,12 @@ class WebServer(InputWebserver):
         async def video_step(client: Client, video_path: str, frame_index: int = 0):
             await self.page(
                 client, NicetrackSolution.video_step, video_path, frame_index
+            )
+
+        @ui.page("/map")
+        async def show_map(client: Client):
+            await self.page(
+                client, NicetrackSolution.show_map
             )
 
     @classmethod
@@ -230,6 +237,23 @@ class NicetrackSolution(InputWebSolution):
         except BaseException as ex:
             self.handle_exception(ex, self.do_trace)
 
+    async def show_map(self):
+        """
+        show a map
+        """
+        async def setup_map():
+            """
+            setup a map
+            """
+            self.map2show=Map(self)
+            await self.map2show.setup_ui()
+
+
+        await self.setup_content_div(setup_map)
+
+    def configure_menu(self):
+        self.link_button(name="map", icon_name="map", target="/map", new_tab=False)
+
     async def home(self):
         """Generates the home page with a map"""
 
@@ -244,16 +268,17 @@ class NicetrackSolution(InputWebSolution):
                         self.input_input = ui.input(
                             value=self.input, on_change=self.input_changed
                         ).props("size=100")
-                        self.tool_button(
-                            tooltip="reload", icon="refresh", handler=self.reload_file
-                        )
-                        if self.is_local:
+                        with ui.row() as self.button_row:
                             self.tool_button(
-                                tooltip="open", icon="file_open", handler=self.open_file
+                                tooltip="reload", icon="refresh", handler=self.reload_file
                             )
-                            self.tool_button(
-                                tooltip="play", icon="play_circle", handler=self.on_play
-                            )
+                            if self.is_local:
+                                self.tool_button(
+                                    tooltip="open", icon="file_open", handler=self.open_file
+                                )
+                                self.tool_button(
+                                    tooltip="play", icon="play_circle", handler=self.on_play
+                                )
                     with splitter.after:
                         self.geo_desc = ui.html("")
                         self.trackpoint_desc = ui.html("")
